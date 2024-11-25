@@ -1,0 +1,321 @@
+import { useState, useRef } from "react";
+import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faShoppingCart, faSearch, faTimes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
+import { faFacebookSquare, faInstagramSquare } from "@fortawesome/free-brands-svg-icons";
+
+export default function ProductPage() {
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [activeCategory, setActiveCategory] = useState("المتجر");
+
+  const sectionRefs = {
+    printers: useRef(null),
+    scanners: useRef(null),
+    "cash-drawers": useRef(null),
+    assemblies: useRef(null),
+    labels: useRef(null),
+    equipment: useRef(null),
+  };
+
+  const categories = [
+    { name: "المتجر", link: "store" },
+    { name: "طابعات حرارية", link: "printers" },
+    { name: "قارئات الباركود", link: "scanners" },
+    { name: "ادراج النقود", link: "cash-drawers" },
+    { name: "تجميعات", link: "assemblies" },
+    { name: "ورق وملصقات", link: "labels" },
+    { name: "معدات إعلام آلي", link: "equipment" },
+  ];
+
+const products = {
+  printers: [
+    { name: "طابعة حرارية Xprinter XP-350B", price: 16500, img: "/images/printer-1.png" },
+    { name: "طابعة حرارية Xprinter XP-370B", price: 17000, img: "/images/printer-2.png" },
+    { name: "طابعة حرارية Xprinter XP-323B", price: 18500, img: "/images/printer-3.png" },
+    { name: "طابعة حرارية Xprinter XP-323B", price: 18500, img: "/images/printer-3.png" },
+  ],
+  scanners: [
+    { name: "قارئ باركود مكتبي Henex HC-666", price: 15000, img: "/images/scanner-1.png" },
+    { name: "قارئ باركود مكتبي Henex HC-6052", price: 16000, img: "/images/scanner-2.png" },
+    { name: "قارئ باركود مكتبي Henex HC-777", price: 18000, img: "/images/scanner-3.png" },
+    { name: "قارئ باركود مكتبي Henex HC-777", price: 18000, img: "/images/scanner-3.png" },
+  ],
+  "cash-drawers": [
+    { name: "درج النقود الفضي", price: 9000, img: "/images/cash-drawer-1.png" },
+    { name: "درج النقود الذهبي", price: 10500, img: "/images/cash-drawer-2.png" },
+    { name: "درج النقود الأسود", price: 11000, img: "/images/cash-drawer-3.png" },
+    { name: "درج النقود الأسود", price: 11000, img: "/images/cash-drawer-3.png" },
+  ],
+  assemblies: [
+    { name: "تجميعة احترافية", price: 55000, img: "/images/assembly-1.png" },
+    { name: "تجميعة اقتصادية", price: 30000, img: "/images/assembly-2.png" },
+    { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png" },
+    { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png" },
+  ],
+  labels: [
+    { name: "ملصقات حرارية", price: 2000, img: "/images/label-1.png" },
+    { name: "ملصقات ملونة", price: 3000, img: "/images/label-2.png" },
+    { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png" },
+    { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png" },
+  ],
+  equipment: [
+    { name: "معدات إعلامية متطورة", price: 75000, img: "/images/equipment-1.png" },
+    { name: "معدات إعلامية بسيطة", price: 25000, img: "/images/equipment-2.png" },
+    { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png" },
+    { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png" },
+  ],
+  };
+
+  const addToCart = (product) => {
+    const existingItem = cart.find((item) => item.name === product.name);
+
+    if (existingItem) {
+      setCart(
+        cart.map((item) =>
+          item.name === product.name ? { ...item, quantity: item.quantity + 1 } : item
+        )
+      );
+    } else {
+      setCart([...cart, { ...product, quantity: 1 }]);
+    }
+
+    setNotification(`تم إضافة "${product.name}" إلى السلة`);
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const updateCartQuantity = (productName, change) => {
+    setCart((prevCart) => {
+      const updatedCart = prevCart.map((item) =>
+        item.name === productName
+          ? { ...item, quantity: Math.max(0, item.quantity + change) }
+          : item
+      );
+
+      return updatedCart.filter((item) => item.quantity > 0);
+    });
+  };
+
+  const scrollToSection = (section) => {
+    setActiveCategory(section);
+    sectionRefs[section]?.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const totalCartPrice = cart.reduce(
+    (total, item) => total + item.quantity * item.price,
+    0
+  );
+
+  return (
+    <div
+      dir="rtl"
+      className="min-h-screen text-white font-zain relative"
+      onClick={() => setIsCartOpen(false)}
+      style={{
+        backgroundImage: "url('/images/background.webP')",
+        backgroundSize: "cover",
+        backgroundPosition: "top",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          {notification}
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="container mx-auto p-3 flex items-center justify-between">
+        {/* Right Section: Logo and Links */}
+        <div className="flex items-center space-x-reverse space-x-10">
+          <Image src="/images/logo.png" alt="Logo" width={90} height={90} />
+          <nav className="flex space-x-reverse space-x-10">
+            <a href="#" className="text-2xl hover:text-teal-300">
+              من نحن
+            </a>
+            <a href="#" className="text-2xl hover:text-teal-300">
+              ماذا نبيع
+            </a>
+            <a href="#" className="text-2xl hover:text-teal-300">
+              اتصل بنا
+            </a>
+          </nav>
+        </div>
+
+        {/* Center Section: Social Media Icons */}
+        <div className="flex space-x-reverse space-x-4">
+          <FontAwesomeIcon
+            icon={faFacebookSquare}
+            className="text-white text-3xl hover:text-teal-300"
+          />
+          <FontAwesomeIcon
+            icon={faInstagramSquare}
+            className="text-white text-3xl hover:text-teal-300"
+          />
+        </div>
+
+        {/* Left Section: Search Bar and Cart */}
+        <div className="flex items-center space-x-reverse space-x-8">
+          {/* Search Bar */}
+          <div className="relative w-[480px]">
+            <input
+              type="text"
+              placeholder="بحث . . ."
+              className="w-full h-12 rounded-xl bg-white bg-opacity-15 text-white placeholder-white px-4 pr-12 text-xl shadow-md border border-white focus:outline-none"
+            />
+            <FontAwesomeIcon
+              icon={faSearch}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-xl text-white"
+            />
+          </div>
+
+          {/* Cart */}
+          <div
+            className="relative flex items-center text-white cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCartOpen(!isCartOpen);
+            }}
+          >
+            <FontAwesomeIcon icon={faShoppingCart} className="text-3xl" />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2">
+              {cart.reduce((total, item) => total + item.quantity, 0)}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* Cart Popup */}
+      {isCartOpen && (
+        <div
+          className="fixed top-16 left-0 bg-white text-black w-80 shadow-lg p-4 rounded-r-xl z-50"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-lg font-bold mb-4">السلة</h2>
+          {cart.length === 0 ? (
+            <p className="text-gray-500">السلة فارغة</p>
+          ) : (
+            <>
+              <ul className="space-y-4">
+                {cart.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-center justify-between border-b pb-2"
+                  >
+                    <div>
+                      <h3 className="font-bold">{item.name}</h3>
+                      <p className="text-gray-600">{item.price} دج</p>
+                    </div>
+                    <div className="flex items-center space-x-reverse space-x-2">
+                      <button
+                        className="px-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        onClick={() => updateCartQuantity(item.name, 1)}
+                      >
+                        <FontAwesomeIcon icon={faPlus} />
+                      </button>
+                      <span className="text-lg">{item.quantity}</span>
+                      <button
+                        className="px-2 bg-red-500 text-white rounded hover:bg-red-600"
+                        onClick={() => updateCartQuantity(item.name, -1)}
+                      >
+                        <FontAwesomeIcon icon={faMinus} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 text-lg font-bold">
+                 الإجمالي: {totalCartPrice.toLocaleString()} دج
+              </div>
+              <button className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                إتمام الشراء
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Categories */}
+      <nav className="flex flex-wrap justify-center space-x-reverse space-x-6 p-2">
+        {categories.map((category, index) => (
+          <button
+            key={index}
+            onClick={() => scrollToSection(category.link)}
+            className={`px-4 py-2 rounded-xl border transition-all ${
+              activeCategory === category.name
+                ? "bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-400/50 border-white"
+                : "bg-black bg-opacity-15 border-blue-400 text-white hover:bg-blue-400"
+            }`}
+            style={
+              activeCategory === category.name
+                ? {
+                    boxShadow: "0 0 8px 4px rgba(59,130,246,0.5)",
+                  }
+                : {}
+            }
+          >
+            {category.name}
+          </button>
+        ))}
+      </nav>
+
+      {/* Main Categories Grid */}
+      <section className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {categories.slice(1).map((category, idx) => (
+          <div
+            key={idx}
+            onClick={() => scrollToSection(category.link)}
+            className="cursor-pointer bg-white bg-opacity-15 p-3 rounded-xl shadow-lg flex flex-col items-center text-center hover:scale-105 transition-all border border-white border-opacity-50"
+          >
+            <Image
+              src={`/images/category-${idx + 1}.png`}
+              alt={category.name}
+              width={400}
+              height={400}
+              className="rounded-xl"
+            />
+            <h2 className="text-3xl font-bold mt-2">{category.name}</h2>
+            <button className="w-full bg-black bg-opacity-15 text-blue-400 text-2xl font-bold mt-2 py-2 border border-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all">
+              تسوق الآن
+            </button>
+          </div>
+        ))}
+      </section>
+
+      {/* Sections */}
+      {categories.slice(1).map((category) => (
+        <section id={category.link} ref={sectionRefs[category.link]} className="p-6" key={category.link}>
+          <h2 className="text-4xl text-blue-500 font-bold mb-4 text-center">
+            {category.name}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products[category.link]?.map((product, idx) => (
+              <div
+                key={idx}
+                className="bg-blue-700 p-4 rounded-lg shadow-md flex flex-col items-center text-center hover:scale-105 transition-all"
+              >
+                <Image
+                  src={product.img}
+                  alt={product.name}
+                  width={200}
+                  height={200}
+                  className="rounded-xl"
+                />
+                <h2 className="text-xl font-bold mt-2">{product.name}</h2>
+                <p className="mt-1 text-xl text-white">{product.price.toLocaleString()} دج</p>
+                <button
+                  onClick={() => addToCart(product)}
+                  className="mt-2 bg-blue-600 px-6 py-2 rounded-xl text-white hover:bg-blue-500"
+                >
+                  أضف إلى السلة
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
