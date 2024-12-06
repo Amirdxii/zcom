@@ -30,42 +30,54 @@ export default function ProductPage() {
   ];
 
 const products = {
-  printers: [
-    { name: "طابعة حرارية Xprinter XP-350B", price: 16500, img: "/images/printer-1.png" },
-    { name: "طابعة حرارية Xprinter XP-370B", price: 17000, img: "/images/printer-2.png" },
-    { name: "طابعة حرارية Xprinter XP-323B", price: 18500, img: "/images/printer-3.png" },
-    { name: "طابعة حرارية Xprinter XP-323B", price: 18500, img: "/images/printer-3.png" },
-  ],
-  scanners: [
-    { name: "قارئ باركود مكتبي Henex HC-666", price: 15000, img: "/images/scanner-1.png" },
-    { name: "قارئ باركود مكتبي Henex HC-6052", price: 16000, img: "/images/scanner-2.png" },
-    { name: "قارئ باركود مكتبي Henex HC-777", price: 18000, img: "/images/scanner-3.png" },
-    { name: "قارئ باركود مكتبي Henex HC-777", price: 18000, img: "/images/scanner-3.png" },
-  ],
-  "cash-drawers": [
-    { name: "درج النقود الفضي", price: 9000, img: "/images/cash-drawer-1.png" },
-    { name: "درج النقود الذهبي", price: 10500, img: "/images/cash-drawer-2.png" },
-    { name: "درج النقود الأسود", price: 11000, img: "/images/cash-drawer-3.png" },
-    { name: "درج النقود الأسود", price: 11000, img: "/images/cash-drawer-3.png" },
-  ],
-  assemblies: [
-    { name: "تجميعة احترافية", price: 55000, img: "/images/assembly-1.png" },
-    { name: "تجميعة اقتصادية", price: 30000, img: "/images/assembly-2.png" },
-    { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png" },
-    { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png" },
-  ],
-  labels: [
-    { name: "ملصقات حرارية", price: 2000, img: "/images/label-1.png" },
-    { name: "ملصقات ملونة", price: 3000, img: "/images/label-2.png" },
-    { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png" },
-    { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png" },
-  ],
-  equipment: [
-    { name: "معدات إعلامية متطورة", price: 75000, img: "/images/equipment-1.png" },
-    { name: "معدات إعلامية بسيطة", price: 25000, img: "/images/equipment-2.png" },
-    { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png" },
-    { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png" },
-  ],
+    printers: [
+      { name: "طابعة حرارية Xprinter XP-350B", price: 16500, img: "/images/printer-1.png" },
+      { name: "طابعة حرارية Xprinter XP-370B", price: 17000, img: "/images/printer-2.png" },
+      { name: "طابعة حرارية Xprinter XP-323B", price: 18500, img: "/images/printer-3.png" },
+      { name: "طابعة حرارية Xprinter XP-420B", price: 22000, img: "/images/printer-3.png" },
+      { name: "طابعة حرارية Xprinter XP-58IIH", price: 25000, img: "/images/printer-3.png" },
+      { name: "طابعة حرارية Xprinter XP-80C", price: 28000, img: "/images/printer-3.png" },
+    ],
+    scanners: [
+      { name: "قارئ باركود مكتبي Henex HC-666", price: 15000, img: "/images/scanner-1.png" },
+      { name: "قارئ باركود مكتبي Henex HC-6052", price: 16000, img: "/images/scanner-2.png" },
+      { name: "قارئ باركود مكتبي Henex HC-777", price: 18000, img: "/images/scanner-3.png" },
+      { name: "قارئ باركود لاسلكي Symbol LS2208", price: 20000, img: "/images/scanner-3.png" },
+      { name: "قارئ باركود صناعي Honeywell Granit 1911i", price: 25000, img: "/images/scanner-3.png" },
+      { name: "قارئ باركود ثنائي الأبعاد Zebra DS2278", price: 28000, img: "/images/scanner-3.png" },
+    ],
+    "cash-drawers": [
+      { name: "درج النقود الفضي", price: 9000, img: "/images/cash-drawer-1.png" },
+      { name: "درج النقود الذهبي", price: 10500, img: "/images/cash-drawer-2.png" },
+      { name: "درج النقود الأسود", price: 11000, img: "/images/cash-drawer-3.png" },
+      { name: "درج نقود POS-X CR-3100", price: 13000, img: "/images/cash-drawer-3.png" },
+      { name: "درج نقود Star Micronics mPOP", price: 18000, img: "/images/cash-drawer-3.png" },
+      { name: "درج نقود NCR 4924-2021", price: 22000, img: "/images/cash-drawer-3.png" },
+    ],
+    assemblies: [
+      { name: "تجميعة احترافية", price: 55000, img: "/images/assembly-1.png" },
+      { name: "تجميعة اقتصادية", price: 30000, img: "/images/assembly-2.png" },
+      { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png" },
+      { name: "تجميعة ألعاب", price: 60000, img: "/images/assembly-3.png" },
+      { name: "تجميعة تصميم", price: 70000, img: "/images/assembly-3.png" },
+      { name: "تجميعة تطوير", price: 80000, img: "/images/assembly-3.png" },
+    ],
+    labels: [
+      { name: "ملصقات حرارية", price: 2000, img: "/images/label-1.png" },
+      { name: "ملصقات ملونة", price: 3000, img: "/images/label-2.png" },
+      { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png" },
+      { name: "ملصقات ورقية", price: 2500, img: "/images/label-3.png" },
+      { name: "ملصقات بلاستيكية", price: 3500, img: "/images/label-3.png" },
+      { name: "ملصقات معدنية", price: 5000, img: "/images/label-3.png" },
+    ],
+    equipment: [
+      { name: "معدات إعلامية متطورة", price: 75000, img: "/images/equipment-1.png" },
+      { name: "معدات إعلامية بسيطة", price: 25000, img: "/images/equipment-2.png" },
+      { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png" },
+      { name: "كاميرا احترافية", price: 30000, img: "/images/equipment-3.png" },
+      { name: "ميكروفون احترافي", price: 15000, img: "/images/equipment-3.png" },
+      { name: "إضاءة احترافية", price: 20000, img: "/images/equipment-3.png" },
+    ],
   };
 
   const addToCart = (product) => {
