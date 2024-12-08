@@ -1,4 +1,12 @@
-
 .slick-dots li.slick-active div {
   background: white !important;
+}
+
+.translate-y-0 {
+  transform: translateY(0);
+}
+
+.translate-y-full {
+  transform: translateY(100%);
+  transition: transform 1s ease-in-out;
 }
