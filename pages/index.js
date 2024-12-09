@@ -11,21 +11,21 @@ import 'aos/dist/aos.css';
 const LazyImage = dynamic(() => import('next/image'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: true // Add suspense to handle lazy loading errors
+  suspense: false // Corrected suspense to true
 });
 const LazySlider = dynamic(() => import('react-slick'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: true // Add suspense to handle lazy loading errors
+  suspense: false // Corrected suspense to true
 });
 
 const CartItem = ({ item, updateCartQuantity, removeFromCart }) => (
   <li className="flex items-center justify-between border-b pb-2 transition-all duration-300">
     <div className="flex items-center">
-      <LazyImage src={item.img} alt={item.name} width={50} height={50} className="rounded-lg" loading="lazy" />
+      <LazyImage src={item.img} alt={item.name} width={60} height={60} className="rounded-lg" loading="lazy" />
       <div className="ml-4">
         <h3 className="font-bold">{item.name}</h3>
-        <p className="text-gray-500">{item.price.toLocaleString()} دج</p>
+        <p className="text-gray-700 font-bold">{item.price.toLocaleString()} دج</p>
       </div>
     </div>
     <div className="flex items-center space-x-reverse space-x-2">
@@ -63,6 +63,64 @@ const debounce = (func, delay) => {
   };
 };
 
+// Update the Sidebar component to accept props
+const Sidebar = ({ isOpen, onClose, categories, setActiveCategory, scrollToSection }) => (
+  <div
+    className={`fixed inset-0 bg-black/50 backdrop-filter backdrop-blur-xl z-50 transition-transform duration-300 ${
+      isOpen ? "translate-x-0" : "translate-x-full"
+    }`}
+    style={{ width: "100%", maxWidth: "300px", right: 0 }}
+    onClick={onClose}
+  >
+    <div
+      className={`p-4 text-white transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      }`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button className="text-2xl mb-4" onClick={onClose}>
+        <FontAwesomeIcon icon={faTimes} />
+      </button>
+      <nav className="space-y-4">
+        <a href="#" className="block text-xl hover:text-sky-400 transition-colors duration-300">
+          من نحن
+        </a>
+        <a href="#" className="block text-xl hover:text-sky-400 transition-colors duration-300">
+          ماذا نبيع
+        </a>
+        <a href="#" className="block text-xl hover:text-sky-400 transition-colors duration-300">
+          اتصل بنا
+        </a>
+        <div className="space-y-2">
+          {categories.map((category, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setActiveCategory(category.link);
+                scrollToSection(category.link);
+                onClose();
+              }}
+              className="block text-xl hover:text-sky-400 transition-colors duration-300"
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+        <div className="flex space-x-reverse space-x-4 mt-4">
+          <FontAwesomeIcon
+            icon={faFacebookSquare}
+            className="text-white text-3xl hover:text-teal-300 transition-colors duration-300"
+          />
+          <FontAwesomeIcon
+            icon={faInstagramSquare}
+            className="text-white text-3xl hover:text-teal-300 transition-colors duration-300"
+          />
+        </div>
+      </nav>
+    </div>
+  </div>
+);
+
 export default function ProductPage() {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -78,6 +136,11 @@ export default function ProductPage() {
   const [selectedCategory, setSelectedCategory] = useState(null); // Add state for selected category
   const [isScrolled, setIsScrolled] = useState(false); // Add state for scroll detection
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Add state for sidebar
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    setIsSidebarOpen(false); // Ensure sidebar is hidden on initial render
+  }, []);
 
   // Load cart from local storage on initial render
   useEffect(() => {
@@ -116,6 +179,33 @@ export default function ProductPage() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Add new useEffect for keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const scrollAmount = 100; // Amount to scroll in pixels
+      
+      switch(e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          window.scrollBy({
+            top: -scrollAmount,
+            behavior: 'smooth'
+          });
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          window.scrollBy({
+            top: scrollAmount,
+            behavior: 'smooth'
+          });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const sectionRefs = {
@@ -223,7 +313,17 @@ export default function ProductPage() {
 
   const scrollToSection = (section) => {
     setActiveCategory(section);
-    sectionRefs[section]?.current?.scrollIntoView({ behavior: "smooth" });
+    const element = sectionRefs[section]?.current;
+    if (element) {
+      const headerHeight = 50; // Approximate header height
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 20; // Added extra 20px padding
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
   };
 
   const totalCartPrice = cart.reduce(
@@ -260,6 +360,17 @@ export default function ProductPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleDropdownClose = () => {
+    setIsClosing(true);
+    // انتظر حتى ينتهي الأنيميشن قبل إغلاق القائمة
+    setTimeout(() => {
+      setIsDropdownOpen(false);
+      setTimeout(() => {
+        setIsClosing(false);
+      }, 50);
+    }, 300);
+  };
+
   const sliderSettings = {
     dots: true,
     infinite: true,
@@ -270,7 +381,6 @@ export default function ProductPage() {
     prevArrow: <div style={{ fontSize: '60px', color: 'white', cursor: 'pointer', transition: 'transform 0.3s' }}>❮</div>,
     centerMode: true,
     centerPadding: '30px',
-    rtl: true, // إضافة هذه السطر لجعل السلايدر يعمل بعكس الاتجاه
     responsive: [
       {
         breakpoint: 1024,
@@ -307,17 +417,29 @@ export default function ProductPage() {
       }
     ],
     appendDots: dots => (
-      <ul style={{ margin: "0px", padding: "0px" }}> {dots} </ul>
+      <ul style={{ 
+        margin: "0px", 
+        padding: "0px",
+        position: "absolute",
+        bottom: "50px", // Adjusted to bring dots closer to the slider
+        left: "0",
+        right: "0",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      }}> 
+        {dots} 
+      </ul>
     ),
     customPaging: i => (
       <div
         style={{
-          width: "6px",
-          height: "6px",
-          borderRadius: "50%",
-          background: "rgba(255, 255, 255, 0.5)",
+          width: "20px",
+          height: "3px",
+          background: "rgba(255, 255, 255, 0.3)",
           display: "inline-block",
-          margin: "0 5px"
+          margin: "0 2px",
+          transition: "all 0.3s ease"
         }}
         className="slick-dot"
       />
@@ -348,58 +470,13 @@ export default function ProductPage() {
       ) : (
         <>
           {/* Sidebar */}
-          <div
-            className={`fixed inset-0 bg-black backdrop-blur-xl bg-opacity-75 z-50 transition-transform duration-300 md:hidden ${
-              isSidebarOpen ? "translate-x-0" : "translate-x-full"
-            }`}
-            style={{ width: "100%", maxWidth: "300px", right: 0 }}
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <div className="p-4 text-white">
-              <button
-                className="text-2xl mb-4"
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-              <nav className="space-y-4">
-                <a href="#" className="block text-xl hover:text-sky-400 transition-colors duration-300">
-                  من نحن
-                </a>
-                <a href="#" className="block text-xl hover:text-sky-400 transition-colors duration-300">
-                  ماذا نبيع
-                </a>
-                <a href="#" className="block text-xl hover:text-sky-400 transition-colors duration-300">
-                  اتصل بنا
-                </a>
-                <div className="space-y-2">
-                  {categories.map((category, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setActiveCategory(category.link);
-                        scrollToSection(category.link);
-                        setIsSidebarOpen(false);
-                      }}
-                      className="block text-xl hover:text-sky-400 transition-colors duration-300"
-                    >
-                      {category.name}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex space-x-reverse space-x-4 mt-4">
-                  <FontAwesomeIcon
-                    icon={faFacebookSquare}
-                    className="text-white text-3xl hover:text-teal-300 transition-colors duration-300"
-                  />
-                  <FontAwesomeIcon
-                    icon={faInstagramSquare}
-                    className="text-white text-3xl hover:text-teal-300 transition-colors duration-300"
-                  />
-                </div>
-              </nav>
-            </div>
-          </div>
+          <Sidebar 
+            isOpen={isSidebarOpen} 
+            onClose={() => setIsSidebarOpen(false)}
+            categories={categories}
+            setActiveCategory={setActiveCategory}
+            scrollToSection={scrollToSection}
+          />
 
           {/* Notification */}
           {notification && (
@@ -410,8 +487,10 @@ export default function ProductPage() {
 
           {/* Header */}
           <header
-            className={`p-2 flex flex-wrap items-center justify-between transition-all duration-500 fixed top-0 left-0 right-0 backdrop-blur border-b border-slate-50/40 z-40 ${
-              isScrolled ? "bg-black bg-opacity-25" : "bg-transparent"
+            className={`p-2 flex flex-wrap items-center justify-between border-b border-slate-50/20 transition-all duration-500 fixed top-0 left-0 right-0 z-40 ${
+              isScrolled 
+              ? "bg-black/15 backdrop-blur-md" 
+              : "bg-transparent backdrop-blur-md"
             }`}
           >
             <div className="flex flex-wrap items-center justify-between w-full mx-4 md:w-auto space-x-reverse space-x-8" data-aos="fade-down">
@@ -467,7 +546,7 @@ export default function ProductPage() {
             {/* Search Bar */}
             {!isSearchOpen && (
               <div className="hidden md:flex items-center space-x-reverse space-x-8 w-full md:w-auto mt-4 md:mt-0">
-                <div className="relative w-full md:w-[350px] lg:w-[500px]">
+                <div className="relative w-full md:w-[250px] lg:w-[400px]">
                   <input
                     type="text"
                     placeholder="بحث . . ."
@@ -495,28 +574,35 @@ export default function ProductPage() {
                     </button>
                   )}
                   {searchQuery && (
-                    <div className="absolute left-0 right-0 mt-2 bg-white text-black rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute left-0 right-0 mt-2 backdrop-blur-xl bg-white/75 text-black rounded-lg shadow-lg max-h-60 overflow-y-scroll"
+                      style={{ 
+                        position: 'absolute',
+                        top: '100%',
+                        width: '100%',
+                        zIndex: 1000,
+                      }}
+                    >
                       {Object.keys(searchResults).map((category) =>
                         searchResults[category].map((product, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center p-2 border-b cursor-pointer hover:bg-gray-200 transition-colors duration-300"
+                            className="flex items-center p-2 border-b border-white/20 cursor-pointer hover:bg-white/70 transition-colors duration-300"
                             onClick={() => {
                               addToCart(product);
                               setSearchQuery("");
                               setIsSearchOpen(false);
                             }}
                           >
-                            <LazyImage src={product.img} alt={product.name} width={50} height={50} className="rounded-lg" />
+                            <LazyImage src={product.img} alt={product.name} width={60} height={60} className="rounded-lg" />
                             <div className="ml-4">
                               <h3 className="font-bold">{product.name}</h3>
-                              <p className="text-gray-600">{product.price.toLocaleString()} دج</p>
+                              <p className="font-bold text-sky-950">{product.price.toLocaleString()} دج</p>
                             </div>
                           </div>
                         ))
                       )}
                       {Object.keys(searchResults).every(category => searchResults[category].length === 0) && (
-                        <div className="p-2 text-center text-gray-500">لا توجد نتائج</div>
+                        <div className="p-2 text-center font-bold text-gray-500">لا توجد نتائج</div>
                       )}
                     </div>
                   )}
@@ -554,23 +640,43 @@ export default function ProductPage() {
           )}
 
           {/* نافذة البحث المنبثقة */}
-          {isSearchOpen && (
-            <div className={`fixed inset-0 bg-sky-900 bg-opacity-30 backdrop-blur-xl  text-white z-50 flex flex-col p-4 overflow-hidden transition-all duration-2000 ease-in-out ${isSearchOpen ? 'translate-y-0' : 'translate-y-full'}`} style={{ willChange: 'transform' }}>
-              <div className="flex justify-between items-center mb-4">
+          <div 
+            className={`fixed inset-0 bg-black/50 backdrop-filter backdrop-blur-xl text-white z-50 flex flex-col md:hidden transition-transform duration-500 ease-in-out ${
+              isSearchOpen ? 'translate-y-0' : 'translate-y-full'
+            }`}
+            style={{ 
+              willChange: 'transform',
+              visibility: isSearchOpen ? 'visible' : 'hidden',
+              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col h-full">
+              <div className="flex justify-between items-center p-4">
                 <h2 className="text-xl">بحث</h2>
                 <button onClick={() => setIsSearchOpen(false)}>
                   <FontAwesomeIcon icon={faTimes} className="text-2xl" />
                 </button>
               </div>
-              <input
-                type="text"
-                placeholder="بحث . . ."
-                className="w-full h-12 rounded-xl bg-white bg-opacity-15 text-white placeholder-white px-4 pr-12 text-xl shadow-md border border-white focus:outline-none transition-all duration-300"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-              {/* إضافة خانة تصنيفات */}
-              <div className="relative mt-4">
+              <div className="p-4 flex-1 overflow-y-auto">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="بحث . . ."
+                    className="w-full h-12 rounded-xl bg-white bg-opacity-15 text-white placeholder-white px-4 pr-12 text-xl shadow-md border border-white focus:outline-none transition-all duration-300"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                  />
+                  {searchQuery && (
+                    <button
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-xl text-white transition-transform duration-300 hover:scale-110"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </button>
+                  )}
+                </div>
+                <div className="relative mt-4">
                 <button
                   className="w-full h-12 rounded-xl bg-white bg-opacity-15 text-white px-4 text-xl shadow-md border border-white focus:outline-none transition-all duration-300 flex justify-between items-center"
                   onClick={(e) => {
@@ -581,13 +687,23 @@ export default function ProductPage() {
                   {selectedCategory ? categories.find(cat => cat.link === selectedCategory).name : "جميع الأصناف"}
                   <FontAwesomeIcon icon={faChevronDown} className="text-xl" />
                 </button>
-                {isDropdownOpen && (
-                  <ul className="absolute w-full bg-white text-black rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto mt-2 transition-transform duration-300 transform translate-y-0">
+                {(isDropdownOpen || isClosing) && (
+                  <ul 
+                    className={`absolute w-full backdrop-blur-xl bg-black bg-opacity-35 text-white rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto mt-2 ${
+                      isClosing ? 'animate-dropdown-close' : 'animate-dropdown-open'
+                    }`}
+                    onAnimationEnd={() => {
+                      if (isClosing) {
+                        setIsDropdownOpen(false);
+                        setIsClosing(false);
+                      }
+                    }}
+                  >
                     <li
-                      className="p-2 cursor-pointer hover:bg-gray-200 transition-colors duration-300"
+                      className="px-4 p-2 cursor-pointer hover:bg-white/20 transition-colors duration-300"
                       onClick={() => {
                         setSelectedCategory(null);
-                        setIsDropdownOpen(false);
+                        handleDropdownClose();
                       }}
                     >
                       جميع الأصناف
@@ -595,10 +711,10 @@ export default function ProductPage() {
                     {categories.map((category, index) => (
                       <li
                         key={index}
-                        className="p-2 cursor-pointer hover:bg-gray-200 transition-colors duration-300"
+                        className="px-4 p-3 cursor-pointer hover:bg-white/20 transition-colors duration-300"
                         onClick={() => {
                           setSelectedCategory(category.link);
-                          setIsDropdownOpen(false);
+                          handleDropdownClose();
                         }}
                       >
                         {category.name}
@@ -614,7 +730,7 @@ export default function ProductPage() {
                 </div>
               )}
               {searchQuery && (
-                <div className="mt-4 bg-white text-black rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="mt-4 backdrop-blur-sm bg-white/75 text-black rounded-lg shadow-lg max-h-60 overflow-y-scroll">
                   {Object.keys(searchResults).map((category) =>
                     searchResults[category].map((product, idx) => (
                       <div
@@ -626,10 +742,10 @@ export default function ProductPage() {
                           setIsSearchOpen(false);
                         }}
                       >
-                        <LazyImage src={product.img} alt={product.name} width={50} height={50} className="rounded-lg" />
+                        <LazyImage src={product.img} alt={product.name} width={60} height={60} className="rounded-lg" />
                         <div className="ml-4">
                           <h3 className="font-bold">{product.name}</h3>
-                          <p className="text-gray-600">{product.price.toLocaleString()} دج</p>
+                          <p className="text-sky-950">{product.price.toLocaleString()} دج</p>
                         </div>
                       </div>
                     ))
@@ -640,45 +756,49 @@ export default function ProductPage() {
                 </div>
               )}
             </div>
-          )}
-
+          </div>
+          </div> {/* Add closing div tag for the search modal */}
           {/* Cart Popup */}
           <div
-            className={`fixed top-0 left-0 h-full bg-white text-black shadow-lg p-4 z-50 transition-transform duration-300 ${
-              isCartOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-            style={{ width: "100%", maxWidth: "400px" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">السلة</h2>
-              <button onClick={() => setIsCartOpen(false)}>
-                <FontAwesomeIcon icon={faTimes} className="text-2xl" />
-              </button>
-            </div>
-            {cart.length === 0 ? (
-              <p className="text-gray-500">السلة فارغة</p>
-            ) : (
-              <>
-                <ul className="space-y-4 overflow-y-auto max-h-[60vh]">
-                  {cart.map((item, idx) => (
-                    <CartItem
-                      key={idx}
-                      item={item}
-                      updateCartQuantity={updateCartQuantity}
-                      removeFromCart={removeFromCart}
-                    />
-                  ))}
-                </ul>
-                <div className="mt-4 text-lg font-bold">
-                  الإجمالي: {totalCartPrice.toLocaleString()} دج
-                </div>
-                <button className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300">
-                  إتمام الشراء
-                </button>
-              </>
-            )}
-          </div>
+  className={`fixed top-0 left-0 w-120 h-full bg-white/75 backdrop-filter backdrop-blur-md text-black z-50 p-4 transition-transform duration-300 ${
+    isCartOpen ? "translate-x-0" : "-translate-x-full"
+  }`}
+  onClick={(e) => e.stopPropagation()}
+>
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-xl font-bold">سلة المشتريات</h2>
+    <button
+      onClick={() => setIsCartOpen(false)}
+      className="text-xl hover:text-red-500 transition-colors duration-300"
+    >
+      <FontAwesomeIcon icon={faTimes} />
+    </button>
+  </div>
+  {cart.length === 0 ? (
+    <p className="text-center">سلة المشتريات فارغة</p>
+  ) : (
+    <>
+      <ul className="space-y-4 mb-4 overflow-y-scroll max-h-[calc(100vh-200px)] cart-scrollbar">
+        {cart.map((item) => (
+          <CartItem
+            key={item.name}
+            item={item}
+            updateCartQuantity={updateCartQuantity}
+            removeFromCart={removeFromCart}
+          />
+        ))}
+      </ul>
+      <div className="border-t pt-4">
+        <div className="text-xl font-bold mb-4">
+          الإجمالي: {totalCartPrice.toLocaleString()} دج
+        </div>
+        <button className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300">
+          إتمام الشراء
+        </button>
+      </div>
+    </>
+  )}
+</div>
 
           {/* Main Categories Grid */}
           <section className="px-4 sm:px-6 lg:px-12 p-2 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-3 relative z-10">
@@ -732,7 +852,7 @@ export default function ProductPage() {
 
           {/* Sections */}
           {categories.map((category) => ( // تأكد من استخدام categories بدون slice
-            <section id={category.link} ref={sectionRefs[category.link]} className="p-3" key={category.link}>
+            <section id={category.link} ref={sectionRefs[category.link]} className="p-3 scroll-mt-24" key={category.link}>
               <h2 className="text-3xl text-blue-400 font-black mb-2 text-center transition-all duration-300">
                 {category.name}
               </h2>
@@ -779,7 +899,7 @@ export default function ProductPage() {
           )}
 
           {/* Footer */}
-          <footer className="bg-black bg-opacity-75 text-white py-6 mt-12">
+          <footer className="bg-black/75 backdrop-filter backdrop-blur-xl text-white py-6 mt-12">
             <div className="container mx-auto flex flex-wrap justify-between items-center">
               <div className="w-full md:w-1/3 mb-4 md:mb-0">
                 <h3 className="text-xl font-bold mb-2">fb:AMIR HAMCHERIF </h3>
@@ -820,6 +940,213 @@ export default function ProductPage() {
             }
             .slick-dots li.slick-active div {
               background: white !important;
+            }
+            @keyframes dropdownOpen {
+              from {
+                opacity: 0;
+                transform: scaleY(0);
+              }
+              to {
+                opacity: 1;
+                transform: scaleY(1);
+              }
+            }
+            @keyframes dropdownClose {
+              0% {
+                opacity: 1;
+                transform: scaleY(1);
+              }
+              100% {
+                opacity: 0;
+                transform: scaleY(0);
+              }
+            }
+            .animate-dropdown-open {
+              animation: dropdownOpen 300ms ease-out forwards;
+              transform-origin: top;
+            }
+            .animate-dropdown-close {
+              animation: dropdownClose 300ms ease-out forwards;
+              transform-origin: top;
+              pointer-events: none;
+            }
+            /* Add these new styles */
+            section {
+              scroll-margin-top: 100px; /* Alternative to scroll-mt-24 for better browser support */
+            }
+            .slick-slider {
+              padding-bottom: 60px; // إضافة تباعد سفلي للسلايدر
+              position: relative;   // مهم لوضع النقاط بشكل صحيح
+            }
+            
+            .slick-dots {
+              display: flex !important;
+              justify-content: center;
+              align-items: center;
+              gap: 0;
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              padding: 0;
+              margin: 0;
+            }
+            
+            .slick-dots li {
+              margin: 0;
+              padding: 5px 0;
+              transition: all 0.3s ease;
+            }
+            
+            .slick-dots li.slick-active {
+              width: 30px;
+            }
+            
+            .slick-dots li.slick-active div {
+              background: white !important;
+              width: 30px !important;
+            }
+            
+            .slick-dots li:not(.slick-active):hover div {
+              background: rgba(255, 255, 255, 0.5) !important;
+            }
+            @supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+              .backdrop-blur-xl {
+                -webkit-backdrop-filter: blur(24px);
+                backdrop-filter: blur(24px);
+              }
+            }
+            /* تحسين شريط التمرير للكارت في الهاتف */
+            @media (max-width: 768px) {
+              .cart-scrollbar {
+
+                overflow-y: scroll !important; /* إجبار ظهور شريط التمرير */
+                scrollbar-width: thin;
+                scrollbar-color: rgba(59, 130, 246, 0.8) transparent;
+                padding-left: 8px;
+              }
+              
+              .cart-scrollbar::-webkit-scrollbar {
+                -webkit-appearance: none;
+                width: 8px !important;
+                display: block !important; /* إجبار ظهور شريط التمرير */
+              }
+              
+              .cart-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+                width: 8px !important;
+                margin: 0;
+              }
+              
+              .cart-scrollbar::-webkit-scrollbar-thumb {
+                background-color: rgba(59, 130, 246, 0.8);
+                border-radius: 10px;
+                min-height: 40px;
+                width: 8px !important;
+                border: 2px solid rgba(255, 255, 255, 0.75);
+              }
+              
+              /* إضافة ظل لتحسين الرؤية */
+              .cart-scrollbar::-webkit-scrollbar-track {
+                box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+              }
+              
+              /* تحسين التفاعل عند اللمس */
+              .cart-scrollbar {
+                touch-action: pan-y;
+                -webkit-tap-highlight-color: transparent;
+              }
+            }
+            /* تحسين شريط التمرير للكارت في الهاتف */
+            @media (max-width: 768px) {
+              .cart-scrollbar {
+                -webkit-overflow-scrolling: touch;
+              }
+              
+              .cart-scrollbar::-webkit-scrollbar {
+                -webkit-appearance: none;
+                width: 8px;
+              }
+              
+              .cart-scrollbar::-webkit-scrollbar-thumb {
+                background-color: rgba(59, 130, 246, 0.8);
+                border-radius: 10px;
+                opacity: 1 !important;
+              }
+              
+              /* تحسين شريط التمرير لنتائج البحث في الهاتف */
+              .max-h-60::-webkit-scrollbar {
+                -webkit-appearance: none;
+                width: 8px;
+              }
+              
+              .max-h-60::-webkit-scrollbar-thumb {
+                background-color: rgba(59, 130, 246, 0.8);
+                border-radius: 10px;
+                opacity: 1 !important;
+              }
+            }
+            @media (min-width: 769px) {
+              /* Main page scrollbar */
+              html, body {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(59, 130, 246, 0.8) transparent;
+              }
+          
+              html::-webkit-scrollbar, body::-webkit-scrollbar {
+                width: 8px;
+              }
+          
+              html::-webkit-scrollbar-track, body::-webkit-scrollbar-track {
+                background: transparent;
+              }
+          
+              html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+                background-color: rgba(59, 130, 246, 0.9);
+                border-radius: 10px;
+                border: 2px solid rgba(255, 255, 255, 0.75);
+              }
+          
+              /* Cart scrollbar */
+              .cart-scrollbar {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(59, 130, 246, 0.9) rgba(0, 0, 0, 0.1);
+                padding-left: 8px;
+              }
+          
+              .cart-scrollbar::-webkit-scrollbar {
+                width: 8px;
+              }
+          
+              .cart-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+              }
+          
+              .cart-scrollbar::-webkit-scrollbar-thumb {
+                background-color: rgba(59, 130, 246, 0.8);
+                border-radius: 10px;
+                border: 2px solid rgba(255, 255, 255, 0.75);
+              }
+          
+              /* Search results scrollbar */
+              .max-h-60 {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(59, 130, 246, 0.8) rgba(0, 0, 0, 0.1);
+              }
+          
+              .max-h-60::-webkit-scrollbar {
+                width: 8px;
+              }
+          
+              .max-h-60::-webkit-scrollbar-track {
+                background: transparent;
+              }
+          
+              .max-h-60::-webkit-scrollbar-thumb {
+                background-color: rgba(59, 130, 246, 0.8);
+                border-radius: 10px;
+                border: 2px solid rgba(255, 255, 255, 0.75);
+              }
             }
           `}</style>
         </>

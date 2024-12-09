@@ -10,3 +10,19 @@
   transform: translateY(100%);
   transition: transform 1s ease-in-out;
 }
+
+.custom-backdrop-blur {
+  backdrop-filter: blur(10px) !important; /* Add !important to ensure it is not overridden */
+}
+
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+}
+
+.backdrop-blur-xl {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px); /* For Safari support */
+}
