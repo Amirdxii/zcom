@@ -11,12 +11,12 @@ import 'aos/dist/aos.css';
 const LazyImage = dynamic(() => import('next/image'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: false // Corrected suspense to true
+  suspense: true // Corrected suspense to true
 });
 const LazySlider = dynamic(() => import('react-slick'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: false // Corrected suspense to true
+  suspense: true // Corrected suspense to true
 });
 
 const CartItem = ({ item, updateCartQuantity, removeFromCart }) => (
