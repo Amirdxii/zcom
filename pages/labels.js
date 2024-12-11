@@ -14,7 +14,7 @@ const LazyImage = dynamic(() => import('next/image'), {
 });
 
 const CartItem = ({ item, updateCartQuantity, removeFromCart }) => (
-  <li className="flex items-center justify-between border-b pb-2 transition-all duration-300">
+  <li className="flex items-center justify بين border-b pb-2 transition-all duration-300">
     <div className="flex items-center">
       <LazyImage src={item.img} alt={item.name} width={50} height={50} className="rounded-lg" loading="lazy" />
       <div className="ml-4">
@@ -160,7 +160,7 @@ export default function LabelsPage() {
       )}
 
       {/* Header */}
-      <header className="container mx-auto p-3 flex flex-wrap items-center justify-between transition-all duration-500">
+      <header className="container mx-auto p-3 flex flex-wrap items-center justify بين transition-all duration-500">
         <div className="flex items-center space-x-reverse space-x-10" data-aos="fade-down">
           <a href="/">
             <LazyImage src="/images/logo.png" alt="Logo" width={90} height={90} className="" priority />
@@ -296,11 +296,14 @@ export default function LabelsPage() {
               className="rounded-xl"
               loading="lazy"
             />
-            <h2 className="text-xl font-bold mt-2">{product.name}</h2>
-            <p className="mt-1 text-xl text-white">{product.price.toLocaleString()} دج</p>
+            <div className="flex flex-col items-center w-full">
+              <p className="mt-4 text-2xl font-bold text-white order-1">{product.price.toLocaleString()} دج</p>
+              <p className="mt-2 text-lg text-white order-2">وصف المنتج</p>
+              <h2 className="mt-2 text-xl text-white order-3">{product.name}</h2>
+            </div>
             <button
               onClick={() => addToCart(product)}
-              className="mt-2 bg-blue-600 px-6 py-2 rounded-xl text-white hover:bg-blue-500 transition-colors duration-300"
+              className="mt-4 bg-blue-600 px-6 py-2 rounded-xl text-white hover:bg-blue-500 transition-colors duration-300"
             >
               أضف إلى السلة
             </button>

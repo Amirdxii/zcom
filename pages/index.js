@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import dynamic from 'next/dynamic';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faShoppingCart, faSearch, faTimes, faPlus, faMinus, faTrash, faSpinner, faArrowUp, faChevronDown, faBars, faList } from "@fortawesome/free-solid-svg-icons";
+import { faShoppingCart, faSearch, faTimes, faPlus, faMinus, faTrash, faSpinner, faArrowUp, faChevronDown, faBars, faList, faCartPlus } from "@fortawesome/free-solid-svg-icons";
 import { faFacebookSquare, faInstagramSquare } from "@fortawesome/free-brands-svg-icons";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -11,12 +11,12 @@ import 'aos/dist/aos.css';
 const LazyImage = dynamic(() => import('next/image'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: true // Corrected suspense to true
+  suspense: false // Corrected suspense to true
 });
 const LazySlider = dynamic(() => import('react-slick'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: true // Corrected suspense to true
+  suspense: false // Corrected suspense to true
 });
 
 const CartItem = ({ item, updateCartQuantity, removeFromCart }) => (
@@ -30,20 +30,20 @@ const CartItem = ({ item, updateCartQuantity, removeFromCart }) => (
     </div>
     <div className="flex items-center space-x-reverse space-x-2">
       <button
-        className="px-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300"
+        className="py-1 px-2 bg-blue-500 rounded-sm text-white hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center"
         onClick={() => updateCartQuantity(item.name, 1)}
       >
         <FontAwesomeIcon icon={faPlus} />
       </button>
       <span className="text-lg">{item.quantity}</span>
       <button
-        className="px-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-300"
+        className="py-1 px-2 bg-red-500 rounded-sm text-white hover:bg-red-600 transition-colors duration-300 flex items-center justify-center"
         onClick={() => updateCartQuantity(item.name, -1)}
       >
         <FontAwesomeIcon icon={faMinus} />
       </button>
       <button
-        className="px-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors duration-300"
+        className="py-1 px-2 rounded-sm text-gray-700 transition-colors duration-300 flex items-center justify-center"
         onClick={() => removeFromCart(item.name)}
       >
         <FontAwesomeIcon icon={faTrash} />
@@ -154,6 +154,7 @@ export default function ProductPage() {
   const [touchEnd, setTouchEnd] = useState(null);
   const minSwipeDistance = 50;
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [lastScrollPosition, setLastScrollPosition] = useState(0);
 
   useEffect(() => {
     setIsSidebarOpen(false); // Ensure sidebar is hidden on initial render
@@ -228,50 +229,25 @@ export default function ProductPage() {
   // Add new useEffect for handling body scroll lock
   useEffect(() => {
     if (isCartOpen || isSearchOpen || isSidebarOpen || isCategoriesOpen) {
-      // حفظ موضع التمرير الحالي
-      const currentPosition = window.pageYOffset;
-      setScrollPosition(currentPosition);
-      
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      
-      if (window.innerWidth <= 768) {
-        // Mobile behavior
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${currentPosition}px`;
-        document.body.style.width = '100%';
-        document.body.style.overflow = 'hidden';
-      } else {
-        // Desktop behavior - only for search and sidebar
-        if (isSearchOpen || isSidebarOpen || isCategoriesOpen) {
-          document.body.style.overflow = 'hidden';
-          document.body.style.paddingRight = `${scrollbarWidth}px`;
-        }
-        // Don't modify scroll behavior when cart is open on desktop
-        if (isCartOpen) {
-          document.body.style.overflow = 'auto';
-          document.body.style.paddingRight = '0px';
-        }
-      }
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflowY = 'scroll'; // تغيير من hidden إلى scroll
+      setScrollPosition(scrollY);
     } else {
-      // Restore scroll position
-      const scrollY = document.body.style.top;
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-      
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-      }
+      document.body.style.overflowY = '';
+      window.scrollTo(0, scrollPosition);
     }
 
     return () => {
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
+      document.body.style.overflowY = '';
     };
   }, [isCartOpen, isSearchOpen, isSidebarOpen, isCategoriesOpen, scrollPosition]);
 
@@ -388,52 +364,52 @@ const handleSearchTouchEnd = () => {
 
   const products = {
     printers: [
-      { name: "Xprinter XP-350B", price: 16500, img: "/images/printer-1.png" },
-      { name: "Xprinter XP-370B", price: 17000, img: "/images/printer-2.png" },
-      { name: "Xprinter XP-323B", price: 18500, img: "/images/printer-3.png" },
-      { name: "Xprinter XP-350B", price: 16500, img: "/images/printer-1.png" },
-      { name: "Xprinter XP-370B", price: 17000, img: "/images/printer-2.png" },
-      { name: "Xprinter XP-323B", price: 18500, img: "/images/printer-3.png" },
+      { name: "Xprinter XP-350B", price: 16500, img: "/images/assembly-1.png", description: "طابعة حرارية عالية الأداء" },
+      { name: "Xprinter XP-370B", price: 17000, img: "/images/assembly-1.png", description: "طابعة حرارية موثوقة" },
+      { name: "Xprinter XP-323B", price: 18500, img: "/images/assembly-1.png", description: "طابعة حرارية سريعة" },
+      { name: "Xprinter XP-350B", price: 16500, img: "/images/assembly-1.png", description: "طابعة حرارية مدمجة" },
+      { name: "Xprinter XP-370B", price: 17000, img: "/images/assembly-1.png", description: "طابعة حرارية اقتصادية" },
+      { name: "Xprinter XP-323B", price: 18500, img: "/images/assembly-1.png", description: "طابعة حرارية متعددة الاستخدامات" },
     ],
     scanners: [
-      { name: "Henex HC-666", price: 15000, img: "/images/scanner-1.png" },
-      { name: "Henex HC-6052", price: 16000, img: "/images/scanner-2.png" },
-      { name: "Henex HC-777", price: 18000, img: "/images/scanner-3.png" },
-      { name: "Henex HC-666", price: 15000, img: "/images/scanner-1.png" },
-      { name: "Henex HC-6052", price: 16000, img: "/images/scanner-2.png" },
-      { name: "Henex HC-777", price: 18000, img: "/images/scanner-3.png" },
+      { name: "Henex HC-666", price: 15000, img: "/images/assembly-1.png", description: "قارئ باركود سريع" },
+      { name: "Henex HC-6052", price: 16000, img: "/images/assembly-1.png", description: "قارئ باركود دقيق" },
+      { name: "Henex HC-777", price: 18000, img: "/images/assembly-1.png", description: "قارئ باركود متين" },
+      { name: "Henex HC-666", price: 15000, img: "/images/assembly-1.png", description: "قارئ باركود لاسلكي" },
+      { name: "Henex HC-6052", price: 16000, img: "/images/assembly-1.png", description: "قارئ باركود مريح" },
+      { name: "Henex HC-777", price: 18000, img: "/images/assembly-1.png", description: "قارئ باركود عالي الدقة" },
     ],
     "cash-drawers": [
-      { name: "درج النقود الفضي", price: 9000, img: "/images/cash-drawer-1.png" },
-      { name: "درج النقود الذهبي", price: 10500, img: "/images/cash-drawer-2.png" },
-      { name: "درج النقود الأسود", price: 11000, img: "/images/cash-drawer-3.png" },
-      { name: "درج النقود الفضي", price: 9000, img: "/images/cash-drawer-1.png" },
-      { name: "درج النقود الذهبي", price: 10500, img: "/images/cash-drawer-2.png" },
-      { name: "درج النقود الأسود", price: 11000, img: "/images/cash-drawer-3.png" },
+      { name: "درج النقود الفضي", price: 9000, img: "/images/assembly-1.png", description: "درج نقود فضي متين" },
+      { name: "درج النقود الذهبي", price: 10500, img: "/images/assembly-1.png", description: "درج نقود ذهبي فاخر" },
+      { name: "درج النقود الأسود", price: 11000, img: "/images/assembly-1.png", description: "درج نقود أسود أنيق" },
+      { name: "درج النقود الفضي", price: 9000, img: "/images/assembly-1.png", description: "درج نقود فضي عملي" },
+      { name: "درج النقود الذهبي", price: 10500, img: "/images/assembly-1.png", description: "درج نقود ذهبي متين" },
+      { name: "درج النقود الأسود", price: 11000, img: "/images/assembly-1.png", description: "درج نقود أسود فاخر" },
     ],
     assemblies: [
-      { name: "تجميعة احترافية", price: 55000, img: "/images/assembly-1.png" },
-      { name: "تجميعة اقتصادية", price: 30000, img: "/images/assembly-2.png" },
-      { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png" },
-      { name: "تجميعة احترافية", price: 55000, img: "/images/assembly-1.png" },
-      { name: "تجميعة اقتصادية", price: 30000, img: "/images/assembly-2.png" },
-      { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png" },
+      { name: "تجميعة احترافية", price: 55000, img: "/images/assembly-1.png", description: "تجميعة كمبيوتر للألعاب" },
+      { name: "تجميعة اقتصادية", price: 30000, img: "/images/assembly-2.png", description: "تجميعة كمبيوتر اقتصادية" },
+      { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png", description: "تجميعة كمبيوتر مكتبية" },
+      { name: "تجميعة احترافية", price: 55000, img: "/images/assembly-1.png", description: "تجميعة كمبيوتر قوية" },
+      { name: "تجميعة اقتصادية", price: 30000, img: "/images/assembly-2.png", description: "تجميعة كمبيوتر ميسورة" },
+      { name: "تجميعة مكتبية", price: 40000, img: "/images/assembly-3.png", description: "تجميعة كمبيوتر عملية" },
     ],
     labels: [
-      { name: "ملصقات حرارية", price: 2000, img: "/images/label-1.png" },
-      { name: "ملصقات ملونة", price: 3000, img: "/images/label-2.png" },
-      { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png" },
-      { name: "ملصقات حرارية", price: 2000, img: "/images/label-1.png" },
-      { name: "ملصقات ملونة", price: 3000, img: "/images/label-2.png" },
-      { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png" },
+      { name: "ملصقات حرارية", price: 2000, img: "/images/label-1.png", description: "ملصقات حرارية عالية الجودة" },
+      { name: "ملصقات ملونة", price: 3000, img: "/images/label-2.png", description: "ملصقات ملونة زاهية" },
+      { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png", description: "ملصقات شفافة متينة" },
+      { name: "ملصقات حرارية", price: 2000, img: "/images/label-1.png", description: "ملصقات حرارية اقتصادية" },
+      { name: "ملصقات ملونة", price: 3000, img: "/images/label-2.png", description: "ملصقات ملونة متنوعة" },
+      { name: "ملصقات شفافة", price: 4000, img: "/images/label-3.png", description: "ملصقات شفافة عالية الجودة" },
     ],
     equipment: [
-      { name: "معدات إعلامية متطورة", price: 75000, img: "/images/equipment-1.png" },
-      { name: "معدات إعلامية بسيطة", price: 25000, img: "/images/equipment-2.png" },
-      { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png" },
-      { name: "معدات إعلامية متطورة", price: 75000, img: "/images/equipment-1.png" },
-      { name: "معدات إعلامية بسيطة", price: 25000, img: "/images/equipment-2.png" },
-      { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png" },
+      { name: "معدات إعلامية متطورة", price: 75000, img: "/images/equipment-1.png", description: "معدات إعلامية متطورة" },
+      { name: "معدات إعلامية بسيطة", price: 25000, img: "/images/equipment-2.png", description: "معدات إعلامية بسيطة" },
+      { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png", description: "معدات إعلامية قياسية" },
+      { name: "معدات إعلامية متطورة", price: 75000, img: "/images/equipment-1.png", description: "معدات إعلامية حديثة" },
+      { name: "معدات إعلامية بسيطة", price: 25000, img: "/images/equipment-2.png", description: "معدات إعلامية ميسورة" },
+      { name: "معدات إعلامية قياسية", price: 50000, img: "/images/equipment-3.png", description: "معدات إعلامية موثوقة" },
     ],
   };
 
@@ -539,14 +515,34 @@ const handleSearchTouchEnd = () => {
     }, 300);
   };
 
-  const closeSearchModal = () => {
-    setIsSearchClosing(true);
-    // لا نقوم بإخفاء النافذة مباشرة
-    setTimeout(() => {
-      setIsSearchOpen(false);
-      setIsSearchClosing(false);
-    }, 500);
-  };
+  // إضافة handleCloseModal كوظيفة مستقلة
+const handleCloseModal = (setIsOpen) => {
+  const scrollY = Math.abs(parseInt(document.body.style.top || '0'));
+  
+  // تأخير بسيط قبل إغلاق النافذة للسماح بإكمال الأنيميشن
+  setTimeout(() => {
+    setIsOpen(false);
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.style.overflowY = '';
+    window.scrollTo(0, scrollY);
+  }, 10);
+};
+
+// تحديث دالة closeSearchModal
+const closeSearchModal = () => {
+  setIsSearchClosing(true);
+  handleCloseModal(setIsSearchOpen);
+  setTimeout(() => {
+    setIsSearchClosing(false);
+  }, 500);
+};
+
+// تحديث دالة handleCloseCategoriesModal
+const handleCloseCategoriesModal = () => {
+  handleCloseModal(setIsCategoriesOpen);
+};
 
   const sliderSettings = {
     dots: true,
@@ -554,10 +550,10 @@ const handleSearchTouchEnd = () => {
     speed: 500,
     slidesToShow: 4,
     slidesToScroll: 1,
-    nextArrow: <div style={{ fontSize: '60px', color: 'white', cursor: 'pointer', transition: 'transform 0.3s' }}>❯</div>,
-    prevArrow: <div style={{ fontSize: '60px', color: 'white', cursor: 'pointer', transition: 'transform 0.3s' }}>❮</div>,
+    nextArrow: <div className="slick-custom-arrow slick-custom-arrow-next">❯</div>,
+    prevArrow: <div className="slick-custom-arrow slick-custom-arrow-prev">❮</div>,
     centerMode: true,
-    centerPadding: '30px',
+    centerPadding: '25px',
     responsive: [
       {
         breakpoint: 1024,
@@ -579,7 +575,7 @@ const handleSearchTouchEnd = () => {
         margin: "0px", 
         padding: "0px",
         position: "absolute",
-        bottom: "50px", // Adjusted to bring dots closer to the slider
+        bottom: "35px", // تعديل موضع النقاط للأسفل
         left: "0",
         right: "0",
         display: "flex",
@@ -626,25 +622,12 @@ const handleSearchTouchEnd = () => {
   };
 
   const handleOpenCategories = () => {
-    setScrollPosition(window.pageYOffset);
+    // إغلاق جميع النوافذ الأخرى أولاً
+    setIsCartOpen(false);
+    setIsSidebarOpen(false);
+    setIsSearchOpen(false);
+    // فتح نافذة التصنيفات
     setIsCategoriesOpen(true);
-  };
-
-  const handleCloseCategoriesModal = () => {
-    // حفظ موضع التمرير قبل إغلاق النافذة
-    const currentPosition = parseInt(document.body.style.top || '0', 10) * -1;
-    
-    // إعادة الخصائص الأصلية للجسم
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.overflow = '';
-    
-    // إغلاق النافذة
-    setIsCategoriesOpen(false);
-    
-    // استعادة موضع التمرير بعد التأكد من إغلاق النافذة
-    window.scrollTo(0, currentPosition);
   };
 
   return (
@@ -787,9 +770,6 @@ const handleSearchTouchEnd = () => {
                         zIndex: 1000,
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      onTouchMove={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => e.stopPropagation()}
                     >
                       {Object.keys(searchResults).map((category) =>
                         searchResults[category].map((product, idx) => (
@@ -853,7 +833,7 @@ const handleSearchTouchEnd = () => {
                 }}
               >
                 <FontAwesomeIcon icon={faSearch} className="text-lg" />
-                <span className="text-sm">ابحث</span>
+                <span className="text-sm ">ابحث</span>
               </button>
               <button
                 className="flex flex-col items-center"
@@ -884,8 +864,8 @@ const handleSearchTouchEnd = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col h-full" onClick={e => e.stopPropagation()}>
-              <div className="search-header flex justify-between items-center p-4">
-                <h2 className="text-xl">بحث</h2>
+              <div className="search-header flex justify-between items-center p-4 border-b border-white/10">
+                <h2 className="text-xl font-bold">بحث</h2>
                 <button 
                   onClick={closeSearchModal}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
@@ -1115,10 +1095,11 @@ const handleSearchTouchEnd = () => {
               <LazySlider {...sliderSettings}>
                 {products[category.link]?.length > 0 ? (
                   products[category.link].map((product, idx) => (
-                    <div key={idx} className="p-2 transition-transform duration-300 hover:scale-105">
-                      <div className="bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% p-4 rounded-lg shadow-md flex flex-col items-center text-center"
+                    <div key={idx} className="p-2 transition-transform duration-300 hover:scale-[1.02]">
+                      <div className="bg-gradient-to-r from-sky-700 from-0% via-sky-500/50 via-25% to-sky-600 to-100% p-4 rounded-lg shadow-md"
                         style={{
-                          background: 'linear-gradient(5deg, #034481 0%, #01203e 25%, #045cad 100%)'
+                          background: 'radial-gradient(circle at 90% 0%, #0565be 0%, transparent 50%), radial-gradient(circle at 0% 10%, #0565be 0%, transparent 50%), linear-gradient(to top, #0565be 0%, transparent 50%), #041c34',
+                          boxShadow: "0 0 4px 2px rgba(0,0,0,0.1)",
                         }}
                       >
                         <LazyImage
@@ -1126,17 +1107,22 @@ const handleSearchTouchEnd = () => {
                           alt={product.name}
                           width={200}
                           height={200}
-                          className="rounded-xl"
+                          className="rounded-xl mx-auto"
                           loading="lazy"
                         />
-                        <h2 className="text-xl font-bold mt-2" style={{ direction: 'rtl' }}>{product.name}</h2>
-                        <p className="mt-1 text-xl text-white" style={{ direction: 'rtl' }}>{product.price.toLocaleString()} دج</p>
-                        <button
-                          onClick={() => addToCart(product)}
-                          className="mt-2 bg-blue-600 px-6 py-2 rounded-xl text-white hover:bg-blue-500 transition-colors duration-300"
-                        >
-                          أضف إلى السلة
-                        </button>
+                        <div className="flex justify-between items-end mt-2">
+                          <button
+                            onClick={() => addToCart(product)}
+                            className="bg-black bg-opacity-15 text-blue-400 p-2 border border-cyan-500 rounded-xl hover:bg-blue-500 hover:text-white text-white hover:bg-blue-500 transition-colors duration-300 flex items-center justify-center"
+                          >
+                            <FontAwesomeIcon icon={faCartPlus} className="text-xl" /> {/* Updated icon */}
+                          </button>
+                          <div className="text-right">
+                            <p className="text-2xl text-white font-bold" style={{ direction: 'rtl' }}>{product.price.toLocaleString()} دج</p>
+                            <p className="text-base text-gray-200 font-semibold" style={{ direction: 'rtl' }}>{product.description}</p>
+                            <h2 className="text-2xl text-sky-200 font-bold" style={{ direction: 'rtl' }}>{product.name}</h2>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -1509,12 +1495,226 @@ const handleSearchTouchEnd = () => {
               animation-play-state: paused;
               transform: scale(1.1);
             }
+            /* تصميم جديد لأسهم السلايدر */
+            .slick-custom-arrow {
+              width: 50px;
+              height: 50px;
+              display: flex !important;
+              align-items: center;
+              justify-content: center;
+              background: rgba(255, 255, 255, 0.15);
+              backdrop-filter: blur(8px);
+              border-radius: 50%;
+              color: white;
+              font-size: 24px;
+              cursor: pointer;
+              position: absolute;
+              top: 50%;
+              transform: translateY(-50%);
+              z-index: 10;
+              transition: all 0.3s ease;
+              border: 2px solid rgba(255, 255, 255, 0.2);
+            }
+          
+            .slick-custom-arrow:hover {
+              background: rgba(255, 255, 255, 0.25);
+              border-color: rgba(255, 255, 255, 0.4);
+              transform: translateY(-50%) scale(1.1);
+            }
+          
+            .slick-custom-arrow-next {
+              right: -25px;
+            }
+          
+            .slick-custom-arrow-prev {
+              left: -25px;
+            }
+          
+            /* تحسين ظهور الأسهم على الشاشات الصغيرة */
+            @media (max-width: 768px) {
+              .slick-custom-arrow {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                background: rgba(0, 0, 0, 0.5);
+              }
+          
+              .slick-custom-arrow-next {
+                right: 5px;
+              }
+          
+              .slick-custom-arrow-prev {
+                left: 5px;
+              }
+            }
+          
+            /* تحسين موقع الأسهم بالنسبة للمحتوى */
+            .slick-slider {
+              margin: 0 30px;
+            }
+          
+            @media (max-width: 768px) {
+              .slick-slider {
+                margin: 0 10px;
+              }
+            }
+            /* تحديث أنماط أسهم السلايدر */
+            .slick-custom-arrow {
+              width: 50px;
+              height: 50px;
+              display: flex !important;
+              align-items: center;
+              justify-content: center;
+              background: rgba(255, 255, 255, 0.15);
+              backdrop-filter: blur(8px);
+              border-radius: 50%;
+              color: white;
+              font-size: 24px;
+              cursor: pointer;
+              position: absolute;
+              top: 40%; /* تعديل الموضع للأعلى */
+              transform: translateY(-50%);
+              z-index: 10;
+              transition: all 0.3s ease;
+              border: 2px solid rgba(255, 255, 255, 0.2);
+            }
+          
+            .slick-custom-arrow:hover {
+              background: rgba(255, 255, 255, 0.25);
+              border-color: rgba(255, 255, 255, 0.4);
+              transform: translateY(-50%) scale(1.1);
+              box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            }
+          
+            .slick-custom-arrow-next {
+              right: -25px;
+            }
+          
+            .slick-custom-arrow-prev {
+              left: -25px;
+            }
+          
+            /* تحسين ظهور الأسهم على الشاشات الصغيرة */
+            @media (max-width: 768px) {
+              .slick-custom-arrow {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                background: rgba(0, 0, 0, 0.5);
+                top: 40%; /* تعديل الموضع للأعلى في الشاشات الصغيرة */
+              }
+          
+              .slick-custom-arrow-next {
+                right: 5px;
+              }
+          
+              .slick-custom-arrow-prev {
+                left: 5px;
+              }
+            }
+          
+            /* تحديث هوامش السلايدر */
+            .slick-slider {
+              margin: 0 20px;
+              padding-bottom: 40px; /* تقليل المسافة السفلية */
+            }
+          
+            @media (max-width: 768px) {
+              .slick-slider {
+                margin: 0 10px;
+                padding-bottom: 30px; /* تقليل المسافة السفلية في الشاشات الصغيرة */
+              }
+            }
+            /* تحديث تصميم أسهم السلايدر */
+            .slick-custom-arrow {
+              width: 60px;
+              height: 60px;
+              display: flex !important;
+              align-items: center;
+              justify-content: center;
+              background: rgba(0, 124, 255, 0.2);
+              backdrop-filter: blur(8px);
+              border-radius: 16px;
+              color: white;
+              font-size: 28px;
+              cursor: pointer;
+              position: absolute;
+              top: 40%;
+              transform: translateY(-50%) translateX(0);
+              z-index: 10;
+              transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+              border: 2px solid rgba(255, 255, 255, 0.2);
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+              overflow: hidden;
+            }
+          
+            .slick-custom-arrow:before {
+              content: '';
+              position: absolute;
+              inset: 0;
+              background: linear-gradient(45deg, rgba(0, 124, 255, 0.3), rgba(0, 124, 255, 0.1));
+              z-index: -1;
+              transition: all 0.4s ease;
+            }
+          
+            .slick-custom-arrow:hover {
+              transform: translateY(-50%) scale(1.05);
+              background: rgba(0, 124, 255, 0.3);
+              border-color: rgba(255, 255, 255, 0.5);
+              box-shadow: 0 8px 25px rgba(0, 124, 255, 0.3),
+                          0 0 0 2px rgba(255, 255, 255, 0.2);
+            }
+          
+            .slick-custom-arrow:hover:before {
+              background: linear-gradient(45deg, rgba(0, 124, 255, 0.4), rgba(0, 124, 255, 0.2));
+            }
+          
+            .slick-custom-arrow:active {
+              transform: translateY(-50%) scale(0.95);
+            }
+          
+            .slick-custom-arrow-next {
+              right: -30px;
+              border-radius: 16px 8px 8px 16px;
+            }
+          
+            .slick-custom-arrow-prev {
+              left: -30px;
+              border-radius: 8px 16px 16px 8px;
+            }
+          
+            /* تحسين ظهور الأسهم على الشاشات الصغيرة */
+            @media (max-width: 768px) {
+              .slick-custom-arrow {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                border-radius: 12px;
+                background: rgba(0, 124, 255, 0.25);
+                backdrop-filter: blur(4px);
+              }
+          
+              .slick-custom-arrow-next {
+                right: 0;
+                border-radius: 12px 6px 6px 12px;
+              }
+          
+              .slick-custom-arrow-prev {
+                left: 0;
+                border-radius: 6px 12px 12px 6px;
+              }
+          
+              .slick-custom-arrow:hover {
+                transform: translateY(-50%) scale(1.1);
+                box-shadow: 0 4px 15px rgba(0, 124, 255, 0.2);
+              }
+            }
           `}</style>
         </>
       )}
       {/* Categories Modal */}
       <div
-        className={`fixed inset-0 bg-black/20 backdrop-filter backdrop-blur-xl text-white z-50 flex flex-col justify-end md:hidden transition-all duration-500 ease-in-out ${
+        className={`fixed inset-0 text-white z-50 flex flex-col justify-end md:hidden transition-all duration-500 ease-in-out ${
           !isCategoriesOpen ? 'translate-y-full' : 'translate-y-0'
         }`}
         onClick={handleCloseCategoriesModal}
@@ -1523,23 +1723,29 @@ const handleSearchTouchEnd = () => {
         onTouchEnd={handleCategoriesTouchEnd}
         style={{ 
           touchAction: 'pan-y',
-          willChange: 'transform'
+          willChange: 'transform',
+          height: '100%', // تثبيت الارتفاع
+          position: 'fixed', // تأكيد الموضع الثابت
+          bottom: 0, // تثبيت في الأسفل
+          overflowY: 'auto' // السماح بالتمرير
         }}
       >
         <div 
-          className="p-4 h-[100vh] overflow-y-auto"
+          className="bg-sky-950 bg-opacity-60 backdrop-blur-xl min-h-screen"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-center mb-6 sticky top-0 py-2 z-10">
-            <h2 className="text-2xl font-bold">التصنيفات</h2>
-            <button 
-              onClick={handleCloseCategoriesModal}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
-            >
-              <FontAwesomeIcon icon={faTimes} className="text-xl" />
-            </button>
+          <div className="sticky top-0 z-10 px-4 py-3 border-b border-white/10">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">التصنيفات</h2>
+              <button 
+                onClick={handleCloseCategoriesModal}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
+              >
+                <FontAwesomeIcon icon={faTimes} className="text-xl" />
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 pb-20">
+          <div className="p-4 grid grid-cols-2 gap-4 pb-20">
             {categories.map((category, index) => (
               <button
                 key={index}
