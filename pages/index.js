@@ -7,17 +7,42 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 const LazyImage = dynamic(() => import('next/image'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: true // Corrected suspense to true
+  suspense: false // Corrected suspense to true
 });
-const LazySlider = dynamic(() => import('react-slick'), { 
-  ssr: false, 
-  loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: true // Corrected suspense to true
+const LazySwiper = dynamic(() => import('swiper/react').then(mod => mod.Swiper), {
+  ssr: false,
+  loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />
 });
+
+// تحديث الأسهم المخصصة
+const NextArrow = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="slick-custom-arrow slick-custom-arrow-prev"
+    aria-label="Previous"
+  >
+    ❯
+  </button>
+);
+
+const PrevArrow = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="slick-custom-arrow slick-custom-arrow-next"
+    aria-label="Next"
+  >
+    ❮
+  </button>
+);
 
 const CartItem = ({ item, updateCartQuantity, removeFromCart }) => (
   <li className="flex items-center justify-between border-b pb-2 transition-all duration-300">
@@ -154,7 +179,6 @@ export default function ProductPage() {
   const [touchEnd, setTouchEnd] = useState(null);
   const minSwipeDistance = 50;
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
-  const [lastScrollPosition, setLastScrollPosition] = useState(0);
 
   useEffect(() => {
     setIsSidebarOpen(false); // Ensure sidebar is hidden on initial render
@@ -229,25 +253,50 @@ export default function ProductPage() {
   // Add new useEffect for handling body scroll lock
   useEffect(() => {
     if (isCartOpen || isSearchOpen || isSidebarOpen || isCategoriesOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflowY = 'scroll'; // تغيير من hidden إلى scroll
-      setScrollPosition(scrollY);
+      // حفظ موضع التمرير الحالي
+      const currentPosition = window.pageYOffset;
+      setScrollPosition(currentPosition);
+      
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      
+      if (window.innerWidth <= 768) {
+        // Mobile behavior
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${currentPosition}px`;
+        document.body.style.width = '100%';
+        document.body.style.overflow = 'hidden';
+      } else {
+        // Desktop behavior - only for search and sidebar
+        if (isSearchOpen || isSidebarOpen || isCategoriesOpen) {
+          document.body.style.overflow = 'hidden';
+          document.body.style.paddingRight = `${scrollbarWidth}px`;
+        }
+        // Don't modify scroll behavior when cart is open on desktop
+        if (isCartOpen) {
+          document.body.style.overflow = 'auto';
+          document.body.style.paddingRight = '0px';
+        }
+      }
     } else {
+      // Restore scroll position
+      const scrollY = document.body.style.top;
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
-      document.body.style.overflowY = '';
-      window.scrollTo(0, scrollPosition);
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     }
 
     return () => {
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
-      document.body.style.overflowY = '';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     };
   }, [isCartOpen, isSearchOpen, isSidebarOpen, isCategoriesOpen, scrollPosition]);
 
@@ -515,89 +564,58 @@ const handleSearchTouchEnd = () => {
     }, 300);
   };
 
-  // إضافة handleCloseModal كوظيفة مستقلة
-const handleCloseModal = (setIsOpen) => {
-  const scrollY = Math.abs(parseInt(document.body.style.top || '0'));
-  
-  // تأخير بسيط قبل إغلاق النافذة للسماح بإكمال الأنيميشن
-  setTimeout(() => {
-    setIsOpen(false);
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.overflowY = '';
-    window.scrollTo(0, scrollY);
-  }, 10);
-};
+  const closeSearchModal = () => {
+    setIsSearchClosing(true);
+    // لا نقوم بإخفاء النافذة مباشرة
+    setTimeout(() => {
+      setIsSearchOpen(false);
+      setIsSearchClosing(false);
+    }, 500);
+  };
 
-// تحديث دالة closeSearchModal
-const closeSearchModal = () => {
-  setIsSearchClosing(true);
-  handleCloseModal(setIsSearchOpen);
-  setTimeout(() => {
-    setIsSearchClosing(false);
-  }, 500);
-};
-
-// تحديث دالة handleCloseCategoriesModal
-const handleCloseCategoriesModal = () => {
-  handleCloseModal(setIsCategoriesOpen);
-};
-
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    nextArrow: <div className="slick-custom-arrow slick-custom-arrow-next">❯</div>,
-    prevArrow: <div className="slick-custom-arrow slick-custom-arrow-prev">❮</div>,
-    centerMode: true,
-    centerPadding: '25px',
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-        }
+  const swiperSettings = {
+    modules: [Navigation, Pagination],
+    spaceBetween: 30,
+    slidesPerView: 4,
+    centeredSlides: false,
+    navigation: true,
+    pagination: { clickable: true },
+    loop: true,
+    dir: 'rtl',
+    simulateTouch: true,
+    mousewheel: false,
+    grabCursor: true,
+    resistance: true,
+    resistanceRatio: 0.85,
+    speed: 400,
+    touchRatio: 1,
+    touchAngle: 45,
+    longSwipes: true,
+    longSwipesRatio: 0.2,
+    shortSwipes: true,
+    touchStartPreventDefault: true,
+    touchMoveStopPropagation: true,
+    preventClicks: false,
+    preventClicksPropagation: false,
+    cssMode: false,
+    threshold: 10,
+    touchStartForcePreventDefault: true,
+    followFinger: true,
+    allowTouchMove: true,
+    breakpoints: {
+      320: {
+        slidesPerView: 1,
+        spaceBetween: 10,
       },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          centerMode: true,
-          centerPadding: '20px',
-        }
+      768: {
+        slidesPerView: 2.2,
+        spaceBetween: 20,
+      },
+      1024: {
+        slidesPerView: 4.2,
+        spaceBetween: 30,
       }
-    ],
-    appendDots: dots => (
-      <ul style={{ 
-        margin: "0px", 
-        padding: "0px",
-        position: "absolute",
-        bottom: "35px", // تعديل موضع النقاط للأسفل
-        left: "0",
-        right: "0",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
-      }}> 
-        {dots} 
-      </ul>
-    ),
-    customPaging: i => (
-      <div
-        style={{
-          width: "20px",
-          height: "3px",
-          background: "rgba(255, 255, 255, 0.3)",
-          display: "inline-block",
-          margin: "0 2px",
-          transition: "all 0.3s ease"
-        }}
-        className="slick-dot"
-      />
-    )
+    }
   };
 
   // إضافة وظيفة جديدة للتحكم في فتح/إغلاق النوافذ
@@ -622,12 +640,25 @@ const handleCloseCategoriesModal = () => {
   };
 
   const handleOpenCategories = () => {
-    // إغلاق جميع النوافذ الأخرى أولاً
-    setIsCartOpen(false);
-    setIsSidebarOpen(false);
-    setIsSearchOpen(false);
-    // فتح نافذة التصنيفات
+    setScrollPosition(window.pageYOffset);
     setIsCategoriesOpen(true);
+  };
+
+  const handleCloseCategoriesModal = () => {
+    // حفظ موضع التمرير قبل إغلاق النافذة
+    const currentPosition = parseInt(document.body.style.top || '0', 10) * -1;
+    
+    // إعادة الخصائص الأصلية للجسم
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    
+    // إغلاق النافذة
+    setIsCategoriesOpen(false);
+    
+    // استعادة موضع التمرير بعد التأكد من إغلاق النافذة
+    window.scrollTo(0, currentPosition);
   };
 
   return (
@@ -770,6 +801,9 @@ const handleCloseCategoriesModal = () => {
                         zIndex: 1000,
                       }}
                       onClick={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => e.stopPropagation()}
                     >
                       {Object.keys(searchResults).map((category) =>
                         searchResults[category].map((product, idx) => (
@@ -833,7 +867,7 @@ const handleCloseCategoriesModal = () => {
                 }}
               >
                 <FontAwesomeIcon icon={faSearch} className="text-lg" />
-                <span className="text-sm ">ابحث</span>
+                <span className="text-sm">ابحث</span>
               </button>
               <button
                 className="flex flex-col items-center"
@@ -864,8 +898,8 @@ const handleCloseCategoriesModal = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col h-full" onClick={e => e.stopPropagation()}>
-              <div className="search-header flex justify-between items-center p-4 border-b border-white/10">
-                <h2 className="text-xl font-bold">بحث</h2>
+              <div className="search-header flex justify-between items-center p-4">
+                <h2 className="text-xl">بحث</h2>
                 <button 
                   onClick={closeSearchModal}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
@@ -1092,44 +1126,52 @@ const handleCloseCategoriesModal = () => {
               <h2 className="text-3xl text-blue-400 font-black mb-2 text-center transition-all duration-300">
                 {category.name}
               </h2>
-              <LazySlider {...sliderSettings}>
+              <LazySwiper {...swiperSettings}>
                 {products[category.link]?.length > 0 ? (
                   products[category.link].map((product, idx) => (
-                    <div key={idx} className="p-2 transition-transform duration-300 hover:scale-[1.02]">
-                      <div className="bg-gradient-to-r from-sky-700 from-0% via-sky-500/50 via-25% to-sky-600 to-100% p-4 rounded-lg shadow-md"
-                        style={{
-                          background: 'radial-gradient(circle at 90% 0%, #0565be 0%, transparent 50%), radial-gradient(circle at 0% 10%, #0565be 0%, transparent 50%), linear-gradient(to top, #0565be 0%, transparent 50%), #041c34',
-                          boxShadow: "0 0 4px 2px rgba(0,0,0,0.1)",
-                        }}
-                      >
-                        <LazyImage
-                          src={product.img}
-                          alt={product.name}
-                          width={200}
-                          height={200}
-                          className="rounded-xl mx-auto"
-                          loading="lazy"
-                        />
-                        <div className="flex justify-between items-end mt-2">
-                          <button
-                            onClick={() => addToCart(product)}
-                            className="bg-black bg-opacity-15 text-blue-400 p-2 border border-cyan-500 rounded-xl hover:bg-blue-500 hover:text-white text-white hover:bg-blue-500 transition-colors duration-300 flex items-center justify-center"
+                    <SwiperSlide key={idx}>
+                      <div className="aspect-w-1 aspect-h-1">
+                        <div className="p-2 h-full transition-transform duration-300 hover:scale-[1.02]">
+                          <div className="bg-gradient-to-r from-sky-700 from-0% via-sky-500/50 via-25% to-sky-600 to-100% p-4 rounded-lg shadow-md h-full flex flex-col justify-between"
+                            style={{
+                              background: 'radial-gradient(circle at 90% 0%, #0565be 0%, transparent 50%), radial-gradient(circle at 0% 10%, #0565be 0%, transparent 50%), linear-gradient(to top, #0565be 0%, transparent 50%), #041c34',
+                              boxShadow: "0 0 4px 2px rgba(0,0,0,0.1)",
+                            }}
                           >
-                            <FontAwesomeIcon icon={faCartPlus} className="text-xl" /> {/* Updated icon */}
-                          </button>
-                          <div className="text-right">
-                            <p className="text-2xl text-white font-bold" style={{ direction: 'rtl' }}>{product.price.toLocaleString()} دج</p>
-                            <p className="text-base text-gray-200 font-semibold" style={{ direction: 'rtl' }}>{product.description}</p>
-                            <h2 className="text-2xl text-sky-200 font-bold" style={{ direction: 'rtl' }}>{product.name}</h2>
+                            <div className="flex-1 relative" style={{ minHeight: '60%' }}>
+                              <LazyImage
+                                src={product.img}
+                                alt={product.name}
+                                width={200}
+                                height={200}
+                                className="rounded-xl object-contain w-full h-full"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div className="mt-2 text-right" dir="rtl">
+                              <div className="flex flex-col">
+                                <p className="text-2xl text-white font-bold mb-1">{product.price.toLocaleString()} دج</p>
+                                <p className="text-sm text-gray-200 font-semibold mb-1">{product.description}</p>
+                                <div className="flex justify-between items-center">
+                                  <h2 className="text-lg text-sky-200 font-bold">{product.name}</h2>
+                                  <button
+                                    onClick={() => addToCart(product)}
+                                    className="bg-black bg-opacity-15 text-white p-2 border border-cyan-500 rounded-xl hover:bg-blue-500 hover:text-white transition-colors duration-300 flex items-center justify-center"
+                                  >
+                                    <FontAwesomeIcon icon={faCartPlus} className="text-xl" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </SwiperSlide>
                   ))
                 ) : (
                   <p className="text-center text-gray-500">لا توجد منتجات في هذه الفئة</p>
                 )}
-              </LazySlider>
+              </LazySwiper>
             </section>
           ))}
 
@@ -1413,7 +1455,7 @@ const handleCloseCategoriesModal = () => {
               /* إخفاء شريط التمرير في الصفحة الرئيسية على الهواتف المحمولة */
               .min-h-screen::-webkit-scrollbar {
                 display: none !important;
-                width: 0 !important;
+                width: 0 !هم;
                 background: transparent !important;
               }
               
@@ -1432,7 +1474,7 @@ const handleCloseCategoriesModal = () => {
               body.scroll-locked {
                 overflow: hidden !important;
                 position: fixed !important;
-                width: 100% !important;
+                width: 100% !هم;
                 -webkit-overflow-scrolling: touch !important;
               }
             }
@@ -1523,11 +1565,13 @@ const handleCloseCategoriesModal = () => {
             }
           
             .slick-custom-arrow-next {
-              right: -25px;
+              right: -30px; // تغيير موقع الزر التالي
+              border-radius: 16px 8px 8px 16px;
             }
           
             .slick-custom-arrow-prev {
-              left: -25px;
+              left: -30px; // تغيير موقع الزر السابق
+              border-radius: 8px 16px 16px 8px;
             }
           
             /* تحسين ظهور الأسهم على الشاشات الصغيرة */
@@ -1540,11 +1584,11 @@ const handleCloseCategoriesModal = () => {
               }
           
               .slick-custom-arrow-next {
-                right: 5px;
+                right: 0;
               }
           
               .slick-custom-arrow-prev {
-                left: 5px;
+                left: 0;
               }
             }
           
@@ -1562,7 +1606,7 @@ const handleCloseCategoriesModal = () => {
             .slick-custom-arrow {
               width: 50px;
               height: 50px;
-              display: flex !important;
+              display: flex !هم;
               align-items: center;
               justify-content: center;
               background: rgba(255, 255, 255, 0.15);
@@ -1587,11 +1631,11 @@ const handleCloseCategoriesModal = () => {
             }
           
             .slick-custom-arrow-next {
-              right: -25px;
+              left: -25px;
             }
           
             .slick-custom-arrow-prev {
-              left: -25px;
+              right: -25px;
             }
           
             /* تحسين ظهور الأسهم على الشاشات الصغيرة */
@@ -1605,11 +1649,11 @@ const handleCloseCategoriesModal = () => {
               }
           
               .slick-custom-arrow-next {
-                right: 5px;
+                left: 5px;
               }
           
               .slick-custom-arrow-prev {
-                left: 5px;
+                right: 5px;
               }
             }
           
@@ -1629,7 +1673,7 @@ const handleCloseCategoriesModal = () => {
             .slick-custom-arrow {
               width: 60px;
               height: 60px;
-              display: flex !important;
+              display: flex !هم;
               align-items: center;
               justify-content: center;
               background: rgba(0, 124, 255, 0.2);
@@ -1674,13 +1718,13 @@ const handleCloseCategoriesModal = () => {
             }
           
             .slick-custom-arrow-next {
-              right: -30px;
-              border-radius: 16px 8px 8px 16px;
+              left: -30px;
+              border-radius: 8px 16px 16px 8px;
             }
           
             .slick-custom-arrow-prev {
-              left: -30px;
-              border-radius: 8px 16px 16px 8px;
+              right: -30px;
+              border-radius: 16px 8px 8px 16px;
             }
           
             /* تحسين ظهور الأسهم على الشاشات الصغيرة */
@@ -1695,12 +1739,12 @@ const handleCloseCategoriesModal = () => {
               }
           
               .slick-custom-arrow-next {
-                right: 0;
+                left: 0;
                 border-radius: 12px 6px 6px 12px;
               }
           
               .slick-custom-arrow-prev {
-                left: 0;
+                right: 0;
                 border-radius: 6px 12px 12px 6px;
               }
           
@@ -1709,12 +1753,112 @@ const handleCloseCategoriesModal = () => {
                 box-shadow: 0 4px 15px rgba(0, 124, 255, 0.2);
               }
             }
+            /* أنماط Swiper */
+            .swiper {
+              direction: rtl;
+              padding: 20px 0;
+            }
+          
+            .swiper-button-next,
+            .swiper-button-prev {
+              color: white;
+              background: rgba(0, 124, 255, 0.2);
+              width: 45px;
+              height: 45px;
+              border-radius: 12px;
+              &:after {
+                font-size: 20px;
+              }
+              &:hover {
+                background: rgba(0, 124, 255, 0.3);
+              }
+            }
+          
+            .swiper-pagination-bullet {
+              background: white;
+            }
+          
+            .swiper-pagination-bullet-active {
+              background: #3b82f6;
+            }
+
+            /* Swiper improvements for desktop */
+            .swiper {
+              user-select: none;
+              touch-action: pan-y;
+            }
+
+            .swiper-slide {
+              transition: transform 0.3s ease;
+              cursor: grab;
+            }
+
+            .swiper-slide:active {
+              cursor: grabbing;
+            }
+
+            .swiper-button-next,
+            .swiper-button-prev {
+              transition: transform 0.3s ease, background-color 0.3s ease;
+            }
+
+            .swiper-button-next:hover,
+            .swiper-button-prev:hover {
+              transform: scale(1.1);
+            }
+
+            .swiper-button-next:active,
+            .swiper-button-prev:active {
+              transform: scale(0.95);
+            }
+
+            /* Prevent text selection during slide */
+            .swiper-slide * {
+              user-select: none;
+              -webkit-user-drag: none;
+            }
+
+            /* تحديث أنماط Swiper للمربعات المتساوية */
+            .swiper-slide {
+              aspect-ratio: 1/1;
+              height: auto !هم;
+            }
+
+            .aspect-w-1.aspect-h-1 {
+              position: relative;
+              padding-bottom: 100%;
+              height: 0;
+            }
+
+            .aspect-w-1.aspect-h-1 > div {
+              position: absolute;
+              top: 0;
+              right: 0;
+              bottom: 0;
+              left: 0;
+            }
+
+            .swiper {
+              padding: 20px 0 40px 0;
+            }
+
+            /* تحسين تنسيق الصور */
+            .flex-1.relative {
+              min-height: 200px;
+              position: relative;
+            }
+
+            @media (max-width: 768px) {
+              .flex-1.relative {
+                min-height: 150px;
+              }
+            }
           `}</style>
         </>
       )}
       {/* Categories Modal */}
       <div
-        className={`fixed inset-0 text-white z-50 flex flex-col justify-end md:hidden transition-all duration-500 ease-in-out ${
+        className={`fixed inset-0 bg-black/20 backdrop-filter backdrop-blur-xl text-white z-50 flex flex-col justify-end md:hidden transition-all duration-500 ease-in-out ${
           !isCategoriesOpen ? 'translate-y-full' : 'translate-y-0'
         }`}
         onClick={handleCloseCategoriesModal}
@@ -1723,29 +1867,23 @@ const handleCloseCategoriesModal = () => {
         onTouchEnd={handleCategoriesTouchEnd}
         style={{ 
           touchAction: 'pan-y',
-          willChange: 'transform',
-          height: '100%', // تثبيت الارتفاع
-          position: 'fixed', // تأكيد الموضع الثابت
-          bottom: 0, // تثبيت في الأسفل
-          overflowY: 'auto' // السماح بالتمرير
+          willChange: 'transform'
         }}
       >
         <div 
-          className="bg-sky-950 bg-opacity-60 backdrop-blur-xl min-h-screen"
+          className="p-4 h-[100vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 z-10 px-4 py-3 border-b border-white/10">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">التصنيفات</h2>
-              <button 
-                onClick={handleCloseCategoriesModal}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
-              >
-                <FontAwesomeIcon icon={faTimes} className="text-xl" />
-              </button>
-            </div>
+          <div className="flex justify-between items-center mb-6 sticky top-0 py-2 z-10">
+            <h2 className="text-2xl font-bold">التصنيفات</h2>
+            <button 
+              onClick={handleCloseCategoriesModal}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
+            >
+              <FontAwesomeIcon icon={faTimes} className="text-xl" />
+            </button>
           </div>
-          <div className="p-4 grid grid-cols-2 gap-4 pb-20">
+          <div className="grid grid-cols-2 gap-4 pb-20">
             {categories.map((category, index) => (
               <button
                 key={index}

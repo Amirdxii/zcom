@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST={"index.js -> next/image":{"id":"index.js -> next/image","files":["static/chunks/node_modules_next_image_js.js"]},"index.js -> react-slick":{"id":"index.js -> react-slick","files":["static/chunks/node_modules_react-slick_lib_index_js.js"]}}
+self.__REACT_LOADABLE_MANIFEST={"index.js -> next/image":{"id":"index.js -> next/image","files":["static/chunks/node_modules_next_image_js.js"]},"index.js -> swiper/react":{"id":"index.js -> swiper/react","files":[]}}

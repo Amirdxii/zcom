@@ -5,10 +5,8 @@
       "static/chunks/node_modules_next_image_js.js"
     ]
   },
-  "index.js -> react-slick": {
-    "id": "index.js -> react-slick",
-    "files": [
-      "static/chunks/node_modules_react-slick_lib_index_js.js"
-    ]
+  "index.js -> swiper/react": {
+    "id": "index.js -> swiper/react",
+    "files": []
   }
 }

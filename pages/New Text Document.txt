@@ -7,17 +7,42 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 const LazyImage = dynamic(() => import('next/image'), { 
   ssr: false, 
   loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
   suspense: false // Corrected suspense to true
 });
-const LazySlider = dynamic(() => import('react-slick'), { 
-  ssr: false, 
-  loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />,
-  suspense: false // Corrected suspense to true
+const LazySwiper = dynamic(() => import('swiper/react').then(mod => mod.Swiper), {
+  ssr: false,
+  loading: () => <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-white" />
 });
+
+// تحديث الأسهم المخصصة
+const NextArrow = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="slick-custom-arrow slick-custom-arrow-prev"
+    aria-label="Previous"
+  >
+    ❯
+  </button>
+);
+
+const PrevArrow = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="slick-custom-arrow slick-custom-arrow-next"
+    aria-label="Next"
+  >
+    ❮
+  </button>
+);
 
 const CartItem = ({ item, updateCartQuantity, removeFromCart }) => (
   <li className="flex items-center justify-between border-b pb-2 transition-all duration-300">
@@ -73,7 +98,7 @@ const Sidebar = ({ isOpen, onClose, categories, setActiveCategory, scrollToSecti
       width: "100%", 
       maxWidth: "300px", 
       right: 0,
-      touchAction: 'pan-x' // إضافة هذا للسماح بالسحب الأفقي
+      touchAction: 'pan-x' // إضافة ه��ا للسماح بالسحب الأفقي
     }}
     onTouchStart={onTouchStart}
     onTouchMove={onTouchMove}
@@ -548,60 +573,48 @@ const handleSearchTouchEnd = () => {
     }, 500);
   };
 
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    nextArrow: <div className="slick-custom-arrow slick-custom-arrow-next">❯</div>,
-    prevArrow: <div className="slick-custom-arrow slick-custom-arrow-prev">❮</div>,
-    centerMode: true,
-    centerPadding: '25px',
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-        }
+  const swiperSettings = {
+    modules: [Navigation, Pagination],
+    spaceBetween: 30,
+    slidesPerView: 4.2, // زيادة عدد السلايدات المعروضة قليلاً
+    centeredSlides: false,
+    navigation: true,
+    pagination: { clickable: true },
+    dir: 'rtl',
+    simulateTouch: true,
+    mousewheel: false,
+    grabCursor: true,
+    resistance: true,
+    resistanceRatio: 0.85,
+    speed: 400,
+    touchRatio: 1,
+    touchAngle: 45,
+    longSwipes: true,
+    longSwipesRatio: 0.2,
+    shortSwipes: true,
+    touchStartPreventDefault: true,
+    touchMoveStopPropagation: true,
+    preventClicks: false,
+    preventClicksPropagation: false,
+    cssMode: false,
+    threshold: 10,
+    touchStartForcePreventDefault: true,
+    followFinger: true,
+    allowTouchMove: true,
+    breakpoints: {
+      320: {
+        slidesPerView: 1.2, // إظهار جزء من السلايد التالي على الموبايل
+        spaceBetween: 10,
       },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          centerMode: true,
-          centerPadding: '20px',
-        }
+      768: {
+        slidesPerView: 2.2, // إظهار جزء من السلايد التالي على التابلت
+        spaceBetween: 20,
+      },
+      1024: {
+        slidesPerView: 4.2, // إظهار جزء من السلايد التالي على الديسكتوب
+        spaceBetween: 30,
       }
-    ],
-    appendDots: dots => (
-      <ul style={{ 
-        margin: "0px", 
-        padding: "0px",
-        position: "absolute",
-        bottom: "35px", // تعديل موضع النقاط للأسفل
-        left: "0",
-        right: "0",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
-      }}> 
-        {dots} 
-      </ul>
-    ),
-    customPaging: i => (
-      <div
-        style={{
-          width: "20px",
-          height: "3px",
-          background: "rgba(255, 255, 255, 0.3)",
-          display: "inline-block",
-          margin: "0 2px",
-          transition: "all 0.3s ease"
-        }}
-        className="slick-dot"
-      />
-    )
+    }
   };
 
   // إضافة وظيفة جديدة للتحكم في فتح/إغلاق النوافذ
@@ -626,11 +639,7 @@ const handleSearchTouchEnd = () => {
   };
 
   const handleOpenCategories = () => {
-    // إغلاق جميع النوافذ الأخرى أولاً
-    setIsCartOpen(false);
-    setIsSidebarOpen(false);
-    setIsSearchOpen(false);
-    // فتح نافذة التصنيفات
+    setScrollPosition(window.pageYOffset);
     setIsCategoriesOpen(true);
   };
 
@@ -857,7 +866,7 @@ const handleSearchTouchEnd = () => {
                 }}
               >
                 <FontAwesomeIcon icon={faSearch} className="text-lg" />
-                <span className="text-sm ">ابحث</span>
+                <span className="text-sm">ابحث</span>
               </button>
               <button
                 className="flex flex-col items-center"
@@ -888,8 +897,8 @@ const handleSearchTouchEnd = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col h-full" onClick={e => e.stopPropagation()}>
-              <div className="search-header flex justify-between items-center p-4 border-b border-white/10">
-                <h2 className="text-xl font-bold">بحث</h2>
+              <div className="search-header flex justify-between items-center p-4">
+                <h2 className="text-xl">بحث</h2>
                 <button 
                   onClick={closeSearchModal}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
@@ -1116,44 +1125,46 @@ const handleSearchTouchEnd = () => {
               <h2 className="text-3xl text-blue-400 font-black mb-2 text-center transition-all duration-300">
                 {category.name}
               </h2>
-              <LazySlider {...sliderSettings}>
+              <LazySwiper {...swiperSettings}>
                 {products[category.link]?.length > 0 ? (
                   products[category.link].map((product, idx) => (
-                    <div key={idx} className="p-2 transition-transform duration-300 hover:scale-[1.02]">
-                      <div className="bg-gradient-to-r from-sky-700 from-0% via-sky-500/50 via-25% to-sky-600 to-100% p-4 rounded-lg shadow-md"
-                        style={{
-                          background: 'radial-gradient(circle at 90% 0%, #0565be 0%, transparent 50%), radial-gradient(circle at 0% 10%, #0565be 0%, transparent 50%), linear-gradient(to top, #0565be 0%, transparent 50%), #041c34',
-                          boxShadow: "0 0 4px 2px rgba(0,0,0,0.1)",
-                        }}
-                      >
-                        <LazyImage
-                          src={product.img}
-                          alt={product.name}
-                          width={200}
-                          height={200}
-                          className="rounded-xl mx-auto"
-                          loading="lazy"
-                        />
-                        <div className="flex justify-between items-end mt-2">
-                          <button
-                            onClick={() => addToCart(product)}
-                            className="bg-black bg-opacity-15 text-blue-400 p-2 border border-cyan-500 rounded-xl hover:bg-blue-500 hover:text-white text-white hover:bg-blue-500 transition-colors duration-300 flex items-center justify-center"
-                          >
-                            <FontAwesomeIcon icon={faCartPlus} className="text-xl" /> {/* Updated icon */}
-                          </button>
-                          <div className="text-right">
-                            <p className="text-2xl text-white font-bold" style={{ direction: 'rtl' }}>{product.price.toLocaleString()} دج</p>
-                            <p className="text-base text-gray-200 font-semibold" style={{ direction: 'rtl' }}>{product.description}</p>
-                            <h2 className="text-2xl text-sky-200 font-bold" style={{ direction: 'rtl' }}>{product.name}</h2>
+                    <SwiperSlide key={idx}>
+                      <div key={idx} className="p-2 transition-transform duration-300 hover:scale-[1.02]">
+                        <div className="bg-gradient-to-r from-sky-700 from-0% via-sky-500/50 via-25% to-sky-600 to-100% p-4 rounded-lg shadow-md"
+                          style={{
+                            background: 'radial-gradient(circle at 90% 0%, #0565be 0%, transparent 50%), radial-gradient(circle at 0% 10%, #0565be 0%, transparent 50%), linear-gradient(to top, #0565be 0%, transparent 50%), #041c34',
+                            boxShadow: "0 0 4px 2px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <LazyImage
+                            src={product.img}
+                            alt={product.name}
+                            width={200}
+                            height={200}
+                            className="rounded-xl mx-auto"
+                            loading="lazy"
+                          />
+                          <div className="flex justify-between items-end mt-2">
+                            <button
+                              onClick={() => addToCart(product)}
+                              className="bg-black bg-opacity-15 text-blue-400 p-2 border border-cyan-500 rounded-xl hover:bg-blue-500 hover:text-white text-white hover:bg-blue-500 transition-colors duration-300 flex items-center justify-center"
+                            >
+                              <FontAwesomeIcon icon={faCartPlus} className="text-xl" /> {/* Updated icon */}
+                            </button>
+                            <div className="text-right">
+                              <p className="text-2xl text-white font-bold" style={{ direction: 'rtl' }}>{product.price.toLocaleString()} دج</p>
+                              <p className="text-base text-gray-200 font-semibold" style={{ direction: 'rtl' }}>{product.description}</p>
+                              <h2 className="text-2xl text-sky-200 font-bold" style={{ direction: 'rtl' }}>{product.name}</h2>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </SwiperSlide>
                   ))
                 ) : (
                   <p className="text-center text-gray-500">لا توجد منتجات في هذه الفئة</p>
                 )}
-              </LazySlider>
+              </LazySwiper>
             </section>
           ))}
 
@@ -1547,11 +1558,13 @@ const handleSearchTouchEnd = () => {
             }
           
             .slick-custom-arrow-next {
-              right: -25px;
+              right: -30px; // تغيير موقع الزر التالي
+              border-radius: 16px 8px 8px 16px;
             }
           
             .slick-custom-arrow-prev {
-              left: -25px;
+              left: -30px; // تغيير موقع الزر السابق
+              border-radius: 8px 16px 16px 8px;
             }
           
             /* تحسين ظهور الأسهم على الشاشات الصغيرة */
@@ -1564,11 +1577,11 @@ const handleSearchTouchEnd = () => {
               }
           
               .slick-custom-arrow-next {
-                right: 5px;
+                right: 0;
               }
           
               .slick-custom-arrow-prev {
-                left: 5px;
+                left: 0;
               }
             }
           
@@ -1611,11 +1624,11 @@ const handleSearchTouchEnd = () => {
             }
           
             .slick-custom-arrow-next {
-              right: -25px;
+              left: -25px;
             }
           
             .slick-custom-arrow-prev {
-              left: -25px;
+              right: -25px;
             }
           
             /* تحسين ظهور الأسهم على الشاشات الصغيرة */
@@ -1629,11 +1642,11 @@ const handleSearchTouchEnd = () => {
               }
           
               .slick-custom-arrow-next {
-                right: 5px;
+                left: 5px;
               }
           
               .slick-custom-arrow-prev {
-                left: 5px;
+                right: 5px;
               }
             }
           
@@ -1698,13 +1711,13 @@ const handleSearchTouchEnd = () => {
             }
           
             .slick-custom-arrow-next {
-              right: -30px;
-              border-radius: 16px 8px 8px 16px;
+              left: -30px;
+              border-radius: 8px 16px 16px 8px;
             }
           
             .slick-custom-arrow-prev {
-              left: -30px;
-              border-radius: 8px 16px 16px 8px;
+              right: -30px;
+              border-radius: 16px 8px 8px 16px;
             }
           
             /* تحسين ظهور الأسهم على الشاشات الصغيرة */
@@ -1719,12 +1732,12 @@ const handleSearchTouchEnd = () => {
               }
           
               .slick-custom-arrow-next {
-                right: 0;
+                left: 0;
                 border-radius: 12px 6px 6px 12px;
               }
           
               .slick-custom-arrow-prev {
-                left: 0;
+                right: 0;
                 border-radius: 6px 12px 12px 6px;
               }
           
@@ -1733,12 +1746,76 @@ const handleSearchTouchEnd = () => {
                 box-shadow: 0 4px 15px rgba(0, 124, 255, 0.2);
               }
             }
+            /* أنماط Swiper */
+            .swiper {
+              direction: rtl;
+              padding: 20px 0;
+            }
+          
+            .swiper-button-next,
+            .swiper-button-prev {
+              color: white;
+              background: rgba(0, 124, 255, 0.2);
+              width: 45px;
+              height: 45px;
+              border-radius: 12px;
+              &:after {
+                font-size: 20px;
+              }
+              &:hover {
+                background: rgba(0, 124, 255, 0.3);
+              }
+            }
+          
+            .swiper-pagination-bullet {
+              background: white;
+            }
+          
+            .swiper-pagination-bullet-active {
+              background: #3b82f6;
+            }
+
+            /* Swiper improvements for desktop */
+            .swiper {
+              user-select: none;
+              touch-action: pan-y;
+            }
+
+            .swiper-slide {
+              transition: transform 0.3s ease;
+              cursor: grab;
+            }
+
+            .swiper-slide:active {
+              cursor: grabbing;
+            }
+
+            .swiper-button-next,
+            .swiper-button-prev {
+              transition: transform 0.3s ease, background-color 0.3s ease;
+            }
+
+            .swiper-button-next:hover,
+            .swiper-button-prev:hover {
+              transform: scale(1.1);
+            }
+
+            .swiper-button-next:active,
+            .swiper-button-prev:active {
+              transform: scale(0.95);
+            }
+
+            /* Prevent text selection during slide */
+            .swiper-slide * {
+              user-select: none;
+              -webkit-user-drag: none;
+            }
           `}</style>
         </>
       )}
       {/* Categories Modal */}
       <div
-        className={`fixed inset-0 text-white z-50 flex flex-col justify-end md:hidden transition-all duration-500 ease-in-out ${
+        className={`fixed inset-0 bg-black/20 backdrop-filter backdrop-blur-xl text-white z-50 flex flex-col justify-end md:hidden transition-all duration-500 ease-in-out ${
           !isCategoriesOpen ? 'translate-y-full' : 'translate-y-0'
         }`}
         onClick={handleCloseCategoriesModal}
@@ -1747,29 +1824,23 @@ const handleSearchTouchEnd = () => {
         onTouchEnd={handleCategoriesTouchEnd}
         style={{ 
           touchAction: 'pan-y',
-          willChange: 'transform',
-          height: '100%', // تثبيت الارتفاع
-          position: 'fixed', // تأكيد الموضع الثابت
-          bottom: 0, // تثبيت في الأسفل
-          overflowY: 'auto' // السماح بالتمرير
+          willChange: 'transform'
         }}
       >
         <div 
-          className="bg-sky-950 bg-opacity-60 backdrop-blur-xl min-h-screen"
+          className="p-4 h-[100vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 z-10 px-4 py-3 border-b border-white/10">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">التصنيفات</h2>
-              <button 
-                onClick={handleCloseCategoriesModal}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
-              >
-                <FontAwesomeIcon icon={faTimes} className="text-xl" />
-              </button>
-            </div>
+          <div className="flex justify-between items-center mb-6 sticky top-0 py-2 z-10">
+            <h2 className="text-2xl font-bold">التصنيفات</h2>
+            <button 
+              onClick={handleCloseCategoriesModal}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/20 transition-colors duration-300"
+            >
+              <FontAwesomeIcon icon={faTimes} className="text-xl" />
+            </button>
           </div>
-          <div className="p-4 grid grid-cols-2 gap-4 pb-20">
+          <div className="grid grid-cols-2 gap-4 pb-20">
             {categories.map((category, index) => (
               <button
                 key={index}
