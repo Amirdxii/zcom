@@ -26,3 +26,15 @@
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px); /* For Safari support */
 }
+
+/* نسبة العرض إلى الارتفاع ثابتة على الحاسوب */
+.swiper-slide {
+  aspect-ratio: 1 / 1;
+}
+
+/* نسبة العرض إلى الارتفاع مرنة على الهاتف */
+@media (max-width: 480px) {
+  .swiper-slide {
+    aspect-ratio: auto;
+  }
+}

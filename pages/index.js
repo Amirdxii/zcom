@@ -604,7 +604,7 @@ const handleSearchTouchEnd = () => {
     allowTouchMove: true,
     breakpoints: {
       320: {
-        slidesPerView: 1,
+        slidesPerView: 2, // Change to 2 slides per view for mobile devices
         spaceBetween: 10,
       },
       768: {
@@ -1454,7 +1454,7 @@ const handleSearchTouchEnd = () => {
               
               /* إخفاء شريط التمرير في الصفحة الرئيسية على الهواتف المحمولة */
               .min-h-screen::-webkit-scrollbar {
-                display: none !important;
+                display: none !هم;
                 width: 0 !هم;
                 background: transparent !important;
               }
@@ -1541,7 +1541,7 @@ const handleSearchTouchEnd = () => {
             .slick-custom-arrow {
               width: 50px;
               height: 50px;
-              display: flex !important;
+              display: flex !هم;
               align-items: center;
               justify-content: center;
               background: rgba(255, 255, 255, 0.15);
@@ -1851,6 +1851,153 @@ const handleSearchTouchEnd = () => {
             @media (max-width: 768px) {
               .flex-1.relative {
                 min-height: 150px;
+              }
+              .text-2xl {
+                font-size: 1.25rem; // Adjust font size for mobile
+              }
+              .text-lg {
+                font-size: 1rem; // Adjust font size for mobile
+              }
+              .text-xl {
+                font-size: 1.125rem; // Adjust font size for mobile
+              }
+              .p-2 {
+                padding: 0.5rem; // Adjust padding for mobile
+              }
+              .p-4 {
+                padding: 1rem; // Adjust padding for mobile
+              }
+              .rounded-xl {
+                border-radius: 0.75rem; // Adjust border radius for mobile
+              }
+              .border {
+                border-width: 1px; // Adjust border width for mobile
+              }
+              .swiper-slide .text-lg, .swiper-slide .text-xl, .swiper-slide .text-2xl {
+                line-height: 0.5; // Adjust line height for mobile
+              }
+            }
+            @media (max-width: 768px) {
+              // ...existing media query styles...
+              
+              /* تحسينات جديدة للسلايدر في الهاتف */
+              .swiper-slide {
+                .bg-gradient-to-r {
+                  display: flex;
+                  flex-direction: column;
+                  height: 100%;
+                  padding: 0.75rem !important;
+                }
+          
+                .flex-1.relative {
+                  height: 45% !important;
+                  min-height: auto !important;
+                  margin-bottom: 0.5rem;
+                }
+          
+                .mt-2 {
+                  height: 55%;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                }
+          
+                .text-2xl {
+                  font-size: 0.875rem !important;
+                  line-height: 1.2;
+                  margin-bottom: 0.25rem !important;
+                }
+                
+                .text-lg {
+                  font-size: 0.75rem !هم;
+                  line-height: 1.2;
+                }
+                
+                .text-sm {
+                  font-size: 0.7rem !هم;
+                  line-height: 1.2;
+                  display: -webkit-box;
+                  -webkit-line-clamp: 2;
+                  -webkit-box-orient: vertical;
+                  overflow: hidden;
+                  height: 2.4em;
+                }
+          
+                .flex.justify-between {
+                  margin-top: auto;
+                  align-items: center;
+                  gap: 0.5rem;
+                }
+          
+                .rounded-xl {
+                  border-radius: 0.5rem !هم;
+                }
+          
+                button {
+                  padding: 0.375rem !هم;
+                }
+          
+                .text-xl {
+                  font-size: 0.875rem !هم;
+                }
+              }
+          
+              /* تحسين المسافات والهوامش */
+              .p-3.scroll-mt-24 {
+                padding: 0.75rem !هم;
+              }
+          
+              .p-2 {
+                padding: 0.5rem !هم;
+              }
+          
+              /* تعديل المسافة بين السلايدر والعنوان */
+              .text-3xl.text-blue-400 {
+                font-size: 1.25rem !هم;
+                margin-bottom: 0.5rem !هم;
+              }
+          
+              /* تحسين أزرار التنقل */
+              .swiper-button-next,
+              .swiper-button-prev {
+                width: 35px !هم;
+                height: 35px !هم;
+                &:after {
+                  font-size: 1rem !هم;
+                }
+              }
+          
+              /* تحسين نقاط التنقل */
+              .swiper-pagination-bullet {
+                width: 6px !هم;
+                height: 6px !هم;
+              }
+            }
+            @media (max-width: 768px) {
+              // ...existing media query styles...
+              
+              /* تعديل نسب السلايدر في الهاتف */
+              .swiper-slide .aspect-w-1.aspect-h-1 {
+                padding-bottom: 130%; /* زيادة الارتفاع للمربع ليصبح مستطيلاً */
+              }
+            
+              /* تعديل توزيع العناصر داخل المربع */
+              .swiper-slide .bg-gradient-to-r {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+              }
+            
+              .swiper-slide .flex-1.relative {
+                flex: 0.5;  /* تخصيص 50% من المساحة للصورة */
+                min-height: auto;
+              }
+            
+              .swiper-slide .mt-2 {
+                flex: 0.5;  /* تخصيص 50% من المساحة للمحتوى */
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
               }
             }
           `}</style>

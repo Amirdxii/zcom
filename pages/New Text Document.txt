@@ -98,7 +98,7 @@ const Sidebar = ({ isOpen, onClose, categories, setActiveCategory, scrollToSecti
       width: "100%", 
       maxWidth: "300px", 
       right: 0,
-      touchAction: 'pan-x' // إضافة ه��ا للسماح بالسحب الأفقي
+      touchAction: 'pan-x' // إضافة هذا للسماح بالسحب الأفقي
     }}
     onTouchStart={onTouchStart}
     onTouchMove={onTouchMove}
@@ -576,10 +576,11 @@ const handleSearchTouchEnd = () => {
   const swiperSettings = {
     modules: [Navigation, Pagination],
     spaceBetween: 30,
-    slidesPerView: 4.2, // زيادة عدد السلايدات المعروضة قليلاً
+    slidesPerView: 4.2,
     centeredSlides: false,
     navigation: true,
     pagination: { clickable: true },
+    loop: false,
     dir: 'rtl',
     simulateTouch: true,
     mousewheel: false,
@@ -603,15 +604,15 @@ const handleSearchTouchEnd = () => {
     allowTouchMove: true,
     breakpoints: {
       320: {
-        slidesPerView: 1.2, // إظهار جزء من السلايد التالي على الموبايل
+        slidesPerView: 1,
         spaceBetween: 10,
       },
       768: {
-        slidesPerView: 2.2, // إظهار جزء من السلايد التالي على التابلت
+        slidesPerView: 2.2,
         spaceBetween: 20,
       },
       1024: {
-        slidesPerView: 4.2, // إظهار جزء من السلايد التالي على الديسكتوب
+        slidesPerView: 4.2,
         spaceBetween: 30,
       }
     }
@@ -1129,32 +1130,38 @@ const handleSearchTouchEnd = () => {
                 {products[category.link]?.length > 0 ? (
                   products[category.link].map((product, idx) => (
                     <SwiperSlide key={idx}>
-                      <div key={idx} className="p-2 transition-transform duration-300 hover:scale-[1.02]">
-                        <div className="bg-gradient-to-r from-sky-700 from-0% via-sky-500/50 via-25% to-sky-600 to-100% p-4 rounded-lg shadow-md"
-                          style={{
-                            background: 'radial-gradient(circle at 90% 0%, #0565be 0%, transparent 50%), radial-gradient(circle at 0% 10%, #0565be 0%, transparent 50%), linear-gradient(to top, #0565be 0%, transparent 50%), #041c34',
-                            boxShadow: "0 0 4px 2px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          <LazyImage
-                            src={product.img}
-                            alt={product.name}
-                            width={200}
-                            height={200}
-                            className="rounded-xl mx-auto"
-                            loading="lazy"
-                          />
-                          <div className="flex justify-between items-end mt-2">
-                            <button
-                              onClick={() => addToCart(product)}
-                              className="bg-black bg-opacity-15 text-blue-400 p-2 border border-cyan-500 rounded-xl hover:bg-blue-500 hover:text-white text-white hover:bg-blue-500 transition-colors duration-300 flex items-center justify-center"
-                            >
-                              <FontAwesomeIcon icon={faCartPlus} className="text-xl" /> {/* Updated icon */}
-                            </button>
-                            <div className="text-right">
-                              <p className="text-2xl text-white font-bold" style={{ direction: 'rtl' }}>{product.price.toLocaleString()} دج</p>
-                              <p className="text-base text-gray-200 font-semibold" style={{ direction: 'rtl' }}>{product.description}</p>
-                              <h2 className="text-2xl text-sky-200 font-bold" style={{ direction: 'rtl' }}>{product.name}</h2>
+                      <div className="aspect-w-1 aspect-h-1">
+                        <div className="p-2 h-full transition-transform duration-300 hover:scale-[1.02]">
+                          <div className="bg-gradient-to-r from-sky-700 from-0% via-sky-500/50 via-25% to-sky-600 to-100% p-4 rounded-lg shadow-md h-full flex flex-col justify-between"
+                            style={{
+                              background: 'radial-gradient(circle at 90% 0%, #0565be 0%, transparent 50%), radial-gradient(circle at 0% 10%, #0565be 0%, transparent 50%), linear-gradient(to top, #0565be 0%, transparent 50%), #041c34',
+                              boxShadow: "0 0 4px 2px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <div className="flex-1 relative" style={{ minHeight: '70%' }}>
+                              <LazyImage
+                                src={product.img}
+                                alt={product.name}
+                                width={200}
+                                height={200}
+                                className="rounded-xl object-contain w-full h-full"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div className="mt-2 text-right" dir="rtl">
+                              <div className="flex flex-col -mt-4">
+                                <p className="text-2xl text-white font-bold">{product.price.toLocaleString()} دج</p>
+                                <p className="text-basic text-gray-100 font-semibold mt-1">{product.description}</p>
+                                <div className="flex justify-between items-center"> {/* أضفنا mt-2 لرفع العناصر قليلاً */}
+                                  <h2 className="text-lg text-sky-200 font-bold">{product.name}</h2>
+                                  <button
+                                    onClick={() => addToCart(product)}
+                                    className="bg-black bg-opacity-15 text-white p-2 border border-cyan-500 rounded-xl hover:bg-blue-500 hover:text-white transition-colors duration-300 flex items-center justify-center transform -translate-y-3" // أضفنا transform -translate-y-2 لرفع الزر للأعلى
+                                  >
+                                    <FontAwesomeIcon icon={faCartPlus} className="text-xl" />
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1448,7 +1455,7 @@ const handleSearchTouchEnd = () => {
               /* إخفاء شريط التمرير في الصفحة الرئيسية على الهواتف المحمولة */
               .min-h-screen::-webkit-scrollbar {
                 display: none !important;
-                width: 0 !important;
+                width: 0 !هم;
                 background: transparent !important;
               }
               
@@ -1467,7 +1474,7 @@ const handleSearchTouchEnd = () => {
               body.scroll-locked {
                 overflow: hidden !important;
                 position: fixed !important;
-                width: 100% !important;
+                width: 100% !هم;
                 -webkit-overflow-scrolling: touch !important;
               }
             }
@@ -1534,7 +1541,7 @@ const handleSearchTouchEnd = () => {
             .slick-custom-arrow {
               width: 50px;
               height: 50px;
-              display: flex !important;
+              display: flex !هم;
               align-items: center;
               justify-content: center;
               background: rgba(255, 255, 255, 0.15);
@@ -1599,7 +1606,7 @@ const handleSearchTouchEnd = () => {
             .slick-custom-arrow {
               width: 50px;
               height: 50px;
-              display: flex !important;
+              display: flex !هم;
               align-items: center;
               justify-content: center;
               background: rgba(255, 255, 255, 0.15);
@@ -1666,7 +1673,7 @@ const handleSearchTouchEnd = () => {
             .slick-custom-arrow {
               width: 60px;
               height: 60px;
-              display: flex !important;
+              display: flex !هم;
               align-items: center;
               justify-content: center;
               background: rgba(0, 124, 255, 0.2);
@@ -1809,6 +1816,42 @@ const handleSearchTouchEnd = () => {
             .swiper-slide * {
               user-select: none;
               -webkit-user-drag: none;
+            }
+
+            /* تحديث أنماط Swiper للمربعات المتساوية */
+            .swiper-slide {
+              aspect-ratio: 1/1;
+              height: auto !هم;
+            }
+
+            .aspect-w-1.aspect-h-1 {
+              position: relative;
+              padding-bottom: 100%;
+              height: 0;
+            }
+
+            .aspect-w-1.aspect-h-1 > div {
+              position: absolute;
+              top: 0;
+              right: 0;
+              bottom: 0;
+              left: 0;
+            }
+
+            .swiper {
+              padding: 20px 0 40px 0;
+            }
+
+            /* تحسين تنسيق الصور */
+            .flex-1.relative {
+              min-height: 200px;
+              position: relative;
+            }
+
+            @media (max-width: 768px) {
+              .flex-1.relative {
+                min-height: 150px;
+              }
             }
           `}</style>
         </>
